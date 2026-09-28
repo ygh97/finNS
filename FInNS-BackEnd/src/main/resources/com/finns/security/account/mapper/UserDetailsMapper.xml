@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finns.security.account.mapper.UserDetailsMapper">
+
+    <resultMap id="authMap" type="AuthVO">
+        <result property="username" column="username"/>
+        <result property="authority" column="authority"/>
+    </resultMap>
+
+    <!--    <resultMap id="memberMap" type="org.scoula.security.account.domain.MemberVO">-->
+    <resultMap id="memberMap" type="MemberVO">
+        <id property="user_no" column="user_no" />
+        <result property="user_no" column="user_no" />
+        <result property="username" column="username" />
+        <result property="password" column="password" />
+        <result property="birth" column="birth" />
+        <result property="mbti_name" column="mbti_name" />
+        <result property="img_url" column="img_url" />
+        <result property="renew_time" column="renew_time"/>
+        <!--        이녀석만 없었더라면...-->
+        <collection property="authList" resultMap="authMap"/>
+    </resultMap>
+
+    <select id="get" resultMap="memberMap" parameterType="String">
+        SELECT m.user_no, m.username, m.password,m.birth, m.mbti_name, m.img_url , m.renew_time, a.authority
+        FROM
+            user m
+                LEFT OUTER JOIN user_auth a
+                                ON m.username = a.username
+        where m.username = #{username}
+    </select>
+</mapper>

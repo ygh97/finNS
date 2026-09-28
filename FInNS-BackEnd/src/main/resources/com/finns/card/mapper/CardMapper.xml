@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finns.card.mapper.CardMapper">
+
+    <!-- 카드 목록 조회 -->
+    <select id="selectAllCards" resultType="com.finns.card.dto.Card">
+        SELECT
+            c.card_no, c.card_name, c.corp_name, c.img_url, c.ex_l_mth, c.ex_in_for, c.detail_link, GROUP_CONCAT(DISTINCT ct.type) AS type, cb.benefit, cb.benefit_detail
+        FROM
+            card c
+                LEFT JOIN
+            card_type ct ON c.card_no = ct.card_no
+                LEFT JOIN
+            card_benefit cb ON c.card_no = cb.card_no
+        GROUP BY
+            c.card_no
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 전체 카드 수 조회 -->
+    <select id="countCards" resultType="long">
+        SELECT COUNT(*) FROM card
+    </select>
+
+    <!-- 특정 카드 조회 -->
+    <select id="selectCardById" resultType="com.finns.card.dto.Card">
+        SELECT
+            c.card_no, c.card_name, c.corp_name, c.img_url, c.ex_l_mth, c.ex_in_for, c.detail_link, GROUP_CONCAT(DISTINCT ct.type) AS type, cb.benefit, cb.benefit_detail
+        FROM
+            card c
+                LEFT JOIN
+            card_type ct ON c.card_no = ct.card_no
+                LEFT JOIN
+            card_benefit cb ON c.card_no = cb.card_no
+        WHERE c.card_no = #{card_no}
+        GROUP BY
+            c.card_no
+    </select>
+
+    <select id="selectRecommendNCards" resultType="com.finns.card.dto.Card" parameterType="com.finns.card.dto.RecommendNCardRequestDTO">
+        SELECT
+            c.card_no, c.card_name, c.corp_name, c.img_url, c.ex_l_mth, c.ex_in_for, c.detail_link, GROUP_CONCAT(DISTINCT ct.type) AS type, cb.benefit, cb.benefit_detail
+        FROM
+            card c
+                LEFT JOIN
+            card_type ct ON c.card_no = ct.card_no
+                LEFT JOIN
+            card_benefit cb ON c.card_no = cb.card_no
+        WHERE ct.type = #{category}
+        GROUP BY
+            c.card_no
+        LIMIT #{num};
+    </select>
+
+    <select id="selectCardsByUser" resultType="com.finns.card.dto.Card">
+        SELECT
+            c.card_no, c.card_name, c.img_url
+        FROM
+            card c
+                LEFT JOIN
+            card_by_user cbu ON c.card_no = cbu.card_no
+        WHERE
+            cbu.user_no = #{userNo}
+    </select>
+
+
+</mapper>

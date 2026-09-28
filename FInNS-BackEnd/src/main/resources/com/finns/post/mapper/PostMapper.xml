@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finns.post.mapper.PostMapper">
+
+    <select id="selectOne" parameterType="long" resultType="com.finns.post.dto.PostResponseDTO">
+        SELECT DISTINCT
+            p.post_no, p.user_no, p.card_no, p.public_status, p.category, p.memo, p.amount, p.place, p.transaction_date,
+            p.great_count, p.stupid_count, p.renew_status, u.username, u.img_url as user_img_url, c.card_name
+        FROM post p
+        LEFT JOIN user u ON p.user_no = u.user_no
+        LEFT JOIN card c ON p.card_no = c.card_no
+        WHERE p.post_no = #{no}
+    </select>
+
+    <select id="selectAllByUserAndDateAndIsPublic" parameterType="com.finns.post.dto.PostRequestByDateDTO" resultType="com.finns.post.dto.PostResponseDTO">
+        SELECT
+        p.post_no, p.user_no, p.card_no, p.public_status, p.category, p.memo, p.amount, p.place, p.transaction_date, p.great_count, p.stupid_count, p.renew_status, u.username
+        FROM post p
+        LEFT JOIN user u ON p.user_no = u.user_no
+        WHERE p.user_no = #{userNo}
+        AND DATE(p.transaction_date) = #{date}
+        AND p.renew_status = true
+
+        <!-- isOnlyPublic가 true이면 공개된 소비내역만 끌고 옴 -->
+        <if test="isOnlyPublic">
+            AND p.public_status = true
+        </if>
+        ORDER BY p.transaction_date ASC
+    </select>
+
+    <select id="selectAllByUserAndCategoryAndIsPublic" parameterType="com.finns.post.dto.PostRequestByCategoryDTO" resultType="com.finns.post.dto.PostResponseDTO">
+        SELECT
+        p.post_no, p.user_no, p.card_no, p.public_status, p.category, p.memo, p.amount, p.place, p.transaction_date, p.great_count, p.stupid_count, p.renew_status, u.username
+        FROM post p
+        LEFT JOIN user u ON p.user_no = u.user_no
+        WHERE p.user_no = #{userNo}
+        AND p.category = #{category}
+        AND p.renew_status = true
+
+        <!-- isOnlyPublic가 true이면 공개된 소비내역만 끌고 옴 -->
+        <if test="isOnlyPublic">
+            AND p.public_status = true
+        </if>
+        ORDER BY p.transaction_date ASC
+    </select>
+
+    <update id="updateRenewStatusByUser" parameterType="com.finns.post.dto.ChangeRenewStatusDTO">
+        UPDATE post
+        SET renew_status = true
+        WHERE user_no = #{userNo}
+          AND renew_status = false
+          AND transaction_date &gt; (SELECT renew_time FROM user WHERE user_no = #{userNo})
+          AND transaction_date &lt;= #{now}
+    </update>
+
+    <select id="selectUpdatedRenewPost" parameterType="com.finns.post.dto.ChangeRenewStatusDTO" resultType="com.finns.post.dto.UpdateAmountDTO">
+        SELECT DATE(transaction_date) as transaction_date, category, user_no, amount
+        FROM post
+        WHERE user_no = #{userNo}
+          AND renew_status = false
+          AND transaction_date &gt; (SELECT renew_time FROM user WHERE user_no = #{userNo})
+          AND transaction_date &lt;= #{now}
+    </select>
+
+    <select id="selectCountByUser" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM post
+        WHERE user_no = #{userNo} AND renew_status = true
+    </select>
+
+    <update id="updatePublicStatus">
+        UPDATE post
+        SET public_status = NOT public_status
+        WHERE post_no = #{postNo} AND user_no = #{userNo}
+    </update>
+
+    <update id="updatePost" parameterType="com.finns.post.dto.UpdatePostDetailDTO">
+        UPDATE post
+        SET public_status = #{publicStatus}, category = #{category}, memo = #{memo}
+        WHERE post_no = #{postNo} AND user_no = #{userNo}
+    </update>
+
+    <!-- 메인 피드: 이미지가 있는 공개 게시글 -->
+    <select id="selectDistinctPostNos" resultType="long">
+        SELECT DISTINCT pi.post_no
+        FROM post_img pi
+                 JOIN post p ON pi.post_no = p.post_no
+        WHERE p.public_status = true
+    </select>
+
+    <select id="selectImagesByPostNo" parameterType="long" resultType="string">
+        SELECT img_url
+        FROM post_img
+        WHERE post_no = #{no}
+    </select>
+
+    <!-- 게시글의 great_count를 증가시키는 쿼리 -->
+    <update id="incrementGreatCount" parameterType="long">
+        UPDATE post
+        SET great_count = great_count + 1
+        WHERE post_no = #{postNo}
+    </update>
+
+    <!-- 게시글의 stupid_count를 증가시키는 쿼리 -->
+    <update id="incrementStupidCount" parameterType="long">
+        UPDATE post
+        SET stupid_count = stupid_count + 1
+        WHERE post_no = #{postNo}
+    </update>
+
+    <update id="decrementGreatCount" parameterType="long">
+        UPDATE post
+        SET great_count = great_count - 1
+        WHERE post_no = #{postNo}
+    </update>
+
+    <update id="decrementStupidCount" parameterType="long">
+        UPDATE post
+        SET stupid_count = stupid_count - 1
+        WHERE post_no = #{postNo}
+    </update>
+
+
+    <select id="getTop3PostsByGreatCount" resultType="com.finns.post.dto.PostResponseDTO">
+        SELECT *
+        FROM post
+        WHERE public_status = true
+        ORDER BY great_count DESC
+            LIMIT 3
+    </select>
+
+    <select id="selectGreatAndStupidCount" resultType="com.finns.post.dto.GreatAndStupidCount">
+        SELECT great_count, stupid_count
+        FROM post
+        WHERE post_no = #{postNo}
+    </select>
+</mapper>

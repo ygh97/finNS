@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finns.amountByDate.mapper.AmountByDateMapper">
+
+    <select id="selectAllByUser" resultType="com.finns.amountByDate.dto.AmountByDate">
+        SELECT DATE_FORMAT(transaction_date, '%Y-%m-%d') as transaction_date, user_no, amount
+        FROM amount_by_date
+        WHERE user_no = #{userNo}
+    </select>
+
+    <insert id="upsertByDateAndUser" parameterType="com.finns.post.dto.UpdateAmountDTO">
+        INSERT INTO amount_by_date (transaction_date, user_no, amount)
+        VALUES (#{transactionDate}, #{userNo}, #{amount})
+            ON DUPLICATE KEY UPDATE amount = amount + VALUES(amount)
+    </insert>
+
+
+
+</mapper>

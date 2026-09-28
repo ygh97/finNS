@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finns.user.mapper.UserMapper">
+    <select id="selectOne" resultType="com.finns.user.dto.User">
+        select user_no, username, birth, mbti_name, img_url, renew_time
+        from user
+        where user_no = #{userNo}
+    </select>
+
+    <!-- follow: 요청한 사용자(userNo)가 해당 사용자를 팔로우하는지 -->
+    <select id="selectAll" resultType="com.finns.user.dto.SearchUserDTO">
+        select u.user_no, u.username, u.img_url,
+               EXISTS(SELECT 1 FROM follow_info f WHERE f.user_no = #{userNo} AND f.to_user_no = u.user_no) AS follow
+        from user u
+        where u.user_no != #{userNo}
+    </select>
+
+
+    <select id="selectTop3ForAmountByDate" parameterType="com.finns.user.dto.YearAndMonthDTO" resultType="com.finns.user.dto.UserTop3DTO">
+        SELECT u.user_no, u.username, u.img_url, SUM(p.amount) AS total_amount
+        FROM user u
+                 JOIN post p ON u.user_no = p.user_no
+        WHERE p.renew_status = true
+            AND YEAR(p.transaction_date) = #{year}
+            AND MONTH(p.transaction_date) = #{month}
+        GROUP BY u.user_no
+        ORDER BY total_amount DESC
+            LIMIT 3
+    </select>
+
+    <select id="selectRecommend5ByMbti" parameterType="com.finns.user.dto.UserRecommendRequestDTO" resultType="com.finns.user.dto.UserRecommendResponseDTO">
+        SELECT u.user_no, u.username, u.img_url,
+               EXISTS(SELECT 1 FROM follow_info f WHERE f.user_no = #{userNo} AND f.to_user_no = u.user_no) AS follow
+        FROM user u
+        WHERE u.mbti_name = #{mbtiName} AND u.user_no != #{userNo}
+        ORDER BY u.renew_time DESC
+            LIMIT 5
+    </select>
+
+
+    <update id="updateRenewTime" parameterType="com.finns.post.dto.ChangeRenewStatusDTO">
+        update user
+        set renew_time = #{now}
+        where user_no = #{userNo}
+    </update>
+
+    <update id="updateMbti" parameterType="com.finns.user.dto.SetMbtiDTO">
+        update user
+        set mbti_name = #{mbtiName}
+        where user_no = #{userNo}
+    </update>
+
+
+</mapper>

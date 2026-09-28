@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finns.recentUser.mapper.RecentUserMapper">
+    <select id="selectRecentUser" resultType="com.finns.recentUser.dto.RecentUserResponseDTO">
+        SELECT u.user_no, u.username, u.img_url,
+               EXISTS(SELECT 1 FROM follow_info f WHERE f.user_no = #{userNo} AND f.to_user_no = u.user_no) AS follow
+        FROM
+            recent_user ru
+                LEFT JOIN
+            user u ON ru.to_user_no = u.user_no
+        WHERE
+            ru.user_no = #{userNo} AND u.user_no != #{userNo}
+        ORDER BY
+            ru.view_time DESC
+        LIMIT 7
+    </select>
+
+    <insert id="insertRecentUser" parameterType="com.finns.recentUser.dto.RecentUserResponseDTO">
+        INSERT INTO recent_user (user_no, to_user_no, view_time)
+        VALUES (#{userNo}, #{toUserNo}, #{viewTime})
+            ON DUPLICATE KEY UPDATE view_time = #{viewTime};
+    </insert>
+
+</mapper>

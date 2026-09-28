@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finns.finance.mapper.FinanceMapper">
+
+    <!-- 예금 상품 리스트 조회 -->
+    <select id="getDepositProducts" resultType="com.finns.finance.dto.FinanceDTO">
+        SELECT fp.finance_product_no, fp.kor_co_nm, fc.img_url, fp.finance_product_type,
+               fp.fin_prdt_nm, fp.intr_rate2, fp.intr_rate, fp.join_member,
+               fp.join_way, fp.save_trm, fp.intr_rate_type_nm, fp.spcl_cnd,
+               fp.mtrt_int
+        FROM finance_product fp
+        JOIN finance_company fc
+          ON fp.kor_co_nm = fc.kor_co_nm
+        WHERE fp.finance_product_type = '01';
+    </select>
+
+    <!-- 적금 상품 리스트 조회 -->
+    <select id="getinstallProducts" resultType="com.finns.finance.dto.FinanceDTO">
+        SELECT fp.finance_product_no, fp.kor_co_nm, fc.img_url, fp.finance_product_type,
+               fp.fin_prdt_nm, fp.intr_rate2, fp.intr_rate, fp.join_member,
+               fp.join_way, fp.save_trm, fp.intr_rate_type_nm, fp.spcl_cnd,
+               fp.mtrt_int
+        FROM finance_product fp
+                 JOIN finance_company fc
+                      ON fp.kor_co_nm = fc.kor_co_nm
+        WHERE fp.finance_product_type = '02';
+    </select>
+
+    <!-- 특정 금융 상품 조회 -->
+    <select id="selectOneProduct" resultType="com.finns.finance.dto.FinanceDTO">
+        SELECT fp.finance_product_no, fp.kor_co_nm, fc.img_url, fc.company_url, fp.finance_product_type,
+               fp.fin_prdt_nm, fp.intr_rate2, fp.intr_rate, fp.join_member,
+               fp.join_way, fp.save_trm, fp.intr_rate_type_nm, fp.spcl_cnd,
+               fp.mtrt_int
+        FROM finance_product fp
+                 JOIN finance_company fc
+                      ON fp.kor_co_nm = fc.kor_co_nm
+        WHERE finance_product_no = #{financeProductNo}
+    </select>
+
+    <!-- 예금(01)에서 intr_rate2(최고금리)가 가장 높은 항목 -->
+    <select id="selectHighestIntrRateForDeposit" resultType="com.finns.finance.dto.FinanceDTO">
+        SELECT *
+        FROM finance_product
+        WHERE finance_product_type = '01'
+        ORDER BY intr_rate2 DESC
+            LIMIT 1
+    </select>
+
+    <!-- 적금(02)에서 (최고금리)가 가장 높은 항목 -->
+    <select id="selectHighestIntrRateForSavings" resultType="com.finns.finance.dto.FinanceDTO">
+        SELECT *
+        FROM finance_product
+        WHERE finance_product_type = '02'
+        ORDER BY intr_rate2 DESC
+            LIMIT 1
+    </select>
+
+    <select id="selectTopDepositProductByUsers" resultType="com.finns.finance.dto.FinanceCount">
+        SELECT
+            p.finance_product_no AS financeProductNo,
+            COUNT(u.finance_product_no) AS productCount
+        FROM
+            finance_product p
+                LEFT JOIN
+            product_by_user u ON p.finance_product_no = u.finance_product_no
+        WHERE
+            p.finance_product_type = '01'  -- 예금
+        GROUP BY
+            p.finance_product_no
+        ORDER BY
+            productCount DESC
+            LIMIT 1
+    </select>
+
+    <select id="selectTopSavingsProductByUsers" resultType="com.finns.finance.dto.FinanceCount">
+        SELECT
+            p.finance_product_no AS financeProductNo,
+            COUNT(u.finance_product_no) AS productCount
+        FROM
+            finance_product p
+                LEFT JOIN
+            product_by_user u ON p.finance_product_no = u.finance_product_no
+        WHERE
+            p.finance_product_type = '02'  -- 적금
+        GROUP BY
+            p.finance_product_no
+        ORDER BY
+            productCount DESC
+            LIMIT 1
+    </select>
+    <!-- 카드 상품 리스트 조회 -->
+    <select id="getCardProducts" resultType="com.finns.finance.dto.CardDTO">
+        SELECT c.card_no, c.card_name, c.corp_name, c.img_url,
+               c.ex_l_mth, c.ex_in_for, c.detail_link,
+               GROUP_CONCAT(ct.type) AS card_categories,
+               cb.benefit,
+               cb.benefit_detail
+        FROM card c
+                LEFT JOIN card_type ct
+                            ON c.card_no = ct.card_no
+                LEFT JOIN card_benefit cb
+                            ON c.card_no = cb.card_no
+        GROUP BY c.card_no
+    </select>
+
+    <!-- 특정 카드 상품 조회 -->
+    <select id="selectOneCard" resultType="com.finns.finance.dto.CardDTO">
+        SELECT
+        c.card_no, c.card_name, c.corp_name,
+        c.img_url, c.ex_l_mth, c.ex_in_for,
+        c.detail_link,
+        GROUP_CONCAT(ct.type) AS card_categories,
+        cb.benefit,
+        cb.benefit_detail
+        FROM card c
+        LEFT JOIN card_type ct ON c.card_no = ct.card_no
+        LEFT JOIN card_benefit cb ON c.card_no = cb.card_no
+        WHERE c.card_no = #{card_no}
+        GROUP BY c.card_no;
+    </select>
+
+    <select id="selectProductsByUser" resultType="com.finns.finance.dto.FinanceDTO">
+        SELECT
+            fp.finance_product_no, fp.finance_product_type, fp.fin_prdt_nm, fp.kor_co_nm, fc.img_url
+        FROM
+            product_by_user pbu
+                JOIN
+            finance_product fp ON pbu.finance_product_no = fp.finance_product_no
+                JOIN
+            finance_company fc ON fp.kor_co_nm = fc.kor_co_nm
+        WHERE
+            pbu.user_no = #{userNo};
+    </select>
+</mapper>

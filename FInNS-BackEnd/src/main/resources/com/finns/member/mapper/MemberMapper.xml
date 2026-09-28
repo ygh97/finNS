@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finns.member.mapper.MemberMapper"> <resultMap id="authMap" type="AuthVO">
+    <result property="username" column="username" />
+    <result property="authority" column="authority" />
+</resultMap
+>
+
+    <resultMap id="memberMap" type="MemberVO">
+        <id property="user_no" column="user_no" />
+        <!--        <result property="user_no" column="user_no" />-->
+        <result property="username" column="username" />
+        <result property="password" column="password" />
+        <result property="birth" column="birth" />
+        <result property="mbti_name" column="mbti_name" />
+        <result property="img_url" column="img_url" />
+        <result property="renew_time" column="renew_time" />
+        <collection property="authList" resultMap="authMap" />
+    </resultMap>
+    <select id="get" resultMap="memberMap">
+        SELECT m.user_no, m.username , m.password ,m.birth , m.mbti_name , m.img_url ,m.renew_time, a.authority
+        FROM
+            user m
+                LEFT OUTER JOIN user_auth a
+                                ON m.username = a.username
+        where m.username = #{username}
+    </select>
+    <select id="checkUsername" resultType="com.finns.security.account.domain.MemberVO">
+        SELECT * FROM user WHERE username = #{username}
+    </select>
+    <insert id="insert">
+        INSERT INTO user(user_no , username , password, birth , mbti_name,img_url,renew_time)
+        VALUES(default,#{username}, #{password}, #{birth},#{mbti_name} ,#{img_url},now())
+    </insert>
+    <insert id="insertAuth">
+        INSERT INTO user_auth(username, authority)
+        VALUES(#{username}, #{authority})
+    </insert>
+
+    <update id="update">
+        UPDATE user
+        SET
+            password = #{password},
+            <if test="img_url != null">img_url = #{img_url},</if>
+            renew_time = now()
+        WHERE username =#{username}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE user        SET
+            password = #{newPassword},
+            renew_time = now()
+        WHERE username =#{username}
+    </update>
+</mapper>

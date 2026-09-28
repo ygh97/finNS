@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finns.greatOrStupid.mapper.GreatOrStupidMapper">
+
+    <!-- 데이터가 없을때 값을 insert -->
+    <insert id="insert" parameterType="com.finns.greatOrStupid.dto.UpdateGreatOrStupidRequestDTO">
+        INSERT INTO great_or_stupid (user_no, post_no, isGreat)
+        VALUES (#{userNo}, #{postNo}, #{greatOrStupid})
+    </insert>
+
+    <!-- isGreat 값이 false일때 true로 업데이트 -->
+    <update id="updateIsGreat">
+        UPDATE great_or_stupid
+        SET isGreat = #{isGreat}
+        WHERE user_no = #{userNo} AND post_no = #{postNo}
+    </update>
+
+    <!--isGreat 값이 true일때 삭제-->
+    <delete id="deleteByUserNoAndPostNo">
+        DELETE FROM great_or_stupid
+        WHERE user_no = #{userNo} AND post_no = #{postNo}
+    </delete>
+
+    <!-- 사용자 번호와 게시물 번호에 따른 isGreat 값을 조회하는 쿼리 -->
+    <select id="findByUserNoAndPostNo" resultType="Boolean">
+        SELECT isGreat
+        FROM great_or_stupid
+        WHERE user_no = #{userNo} AND post_no = #{postNo}
+    </select>
+</mapper>
