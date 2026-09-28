@@ -36,7 +36,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/api';
 import FollowButton from './FollowButton.vue';
 import moment from 'moment';
 import { useRoute } from 'vue-router';
@@ -48,7 +48,7 @@ const auth = JSON.parse(localStorage.getItem('auth'));
 
 const getFollowerList = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${userNo}/follower/${auth.user.user_no}`);
+    const response = await api.get(`/users/${userNo}/follower`);
     users.value = response.data;
 
   } catch (error) {

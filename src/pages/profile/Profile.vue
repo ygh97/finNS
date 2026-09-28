@@ -337,7 +337,7 @@ import CountUp from 'vue-countup-v3';
 import { ref, onMounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel';
-import axios from 'axios';
+import api from '@/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -351,8 +351,8 @@ const followingCount = ref(0);
 
 const getFollowCounts = async () => {
   try {
-    const response = await axios.get(
-      `http://localhost:8080/users/${userNo}/followCounts`
+    const response = await api.get(
+      `/users/${userNo}/followCounts`
     );
     followerCount.value = response.data.followerCount;
     followingCount.value = response.data.followingCount;
@@ -370,11 +370,10 @@ watch (
 const getFollowingStatus = async () => {
   try {
     // 서버에서 두 사용자 간의 팔로잉 상태 확인
-    const response = await axios.get(
-      `http://localhost:8080/followingcheck`,
+    const response = await api.get(
+      `/followingcheck`,
       {
         params: {
-          user_no: auth.user.user_no,
           to_user_no: userNo,
         },
       }
@@ -389,10 +388,8 @@ const getFollowingStatus = async () => {
 
 const getUser = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${userNo}`);
+    const response = await api.get(`/users/${userNo}`);
     user.value = response.data;
-
-    console.log('aaaaaaaaaaaa유저정보 : ');
     console.log(user.value);
   } catch (error) {
     console.error('Error renewing posts:', error);
@@ -402,8 +399,8 @@ const getUser = async () => {
 let spendingCounts = ref(0);
 const getSpendingCounts = async () => {
   try {
-    const response = await axios.get(
-      `http://localhost:8080/users/${userNo}/posts/count`
+    const response = await api.get(
+      `/users/${userNo}/posts/count`
     );
     spendingCounts.value = response.data;
   } catch (error) {
@@ -413,8 +410,8 @@ const getSpendingCounts = async () => {
 
 const renew = async () => {
   try {
-    const response = await axios.put(
-      `http://localhost:8080/users/${userNo}/renew`
+    const response = await api.put(
+      `/users/${userNo}/renew`
     );
     location.reload();
   } catch (error) {
@@ -424,8 +421,8 @@ const renew = async () => {
 
 const analysisMbti = async () => {
   try {
-    const response = await axios.put(
-      `http://localhost:8080/users/${userNo}/mbti`
+    const response = await api.put(
+      `/users/${userNo}/mbti`
     );
   } catch (error) {
     console.error('Error analysis mbti:', error);
@@ -438,7 +435,7 @@ const analysisMbti = async () => {
 const productsList = ref([]);
 const setProductsList = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/product/users/${userNo}/products`);
+    const response = await api.get(`/product/users/${userNo}/products`);
     productsList.value = response.data;
 
   } catch (error) {
@@ -458,7 +455,7 @@ const gotoCardDetail = (no) => {
 const cards = ref([]);
 const setCardsList = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${userNo}/cards`);
+    const response = await api.get(`/users/${userNo}/cards`);
     cards.value = response.data;
 
   } catch (error) {

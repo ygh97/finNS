@@ -91,40 +91,7 @@
         </template>
       </Carousel>
 
-      <!-- 사진 추가 -->
-
-      <br />
-      <br />
-      <br />
-      <!--begin::Form-->
-      <form class="form" action="#" method="post">
-        <!--begin::Input group-->
-        <div class="fv-row">
-          <!--begin::Dropzone-->
-          <div class="dropzone" id="kt_dropzonejs_example_1">
-            <!--begin::Message-->
-            <div class="dz-message needsclick">
-              <i class="ki-duotone ki-file-up fs-3x text-primary"
-                ><span class="path1"></span><span class="path2"></span
-              ></i>
-
-              <!--begin::Info-->
-              <div class="ms-4">
-                <h3 class="fs-5 fw-bold text-gray-900 mb-1">
-                  여기에 파일을 놓거나 클릭하여 업로드하세요.
-                </h3>
-                <span class="fs-7 fw-semibold text-gray-500"
-                  >최대 10개의 파일을 업로드 할 수 있습니다</span
-                >
-              </div>
-              <!--end::Info-->
-            </div>
-          </div>
-          <!--end::Dropzone-->
-        </div>
-        <!--end::Input group-->
-      </form>
-      <!--end::Form 사진추가 -->
+      <!-- 사진 추가: 서버 업로드 API가 없어 제거함 (이전 코드는 외부 데모 서버로 파일을 전송했음) -->
 
       <br /><br /><br />
 
@@ -138,10 +105,9 @@
 </template>
 
 <script setup>
+import api from '@/api';
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import Dropzone from 'dropzone';
-import 'dropzone/dist/dropzone.css';
 import Banner from '@/components/common/Banner.vue';
 import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel';
 
@@ -159,7 +125,7 @@ let post = ref({
 
 const getPost = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/posts/${postNo}`);
+    const response = await api.get(`/posts/${postNo}`);
     post.value = response.data;
   } catch (error) {
     console.error('Error fetching post:', error);
@@ -179,35 +145,21 @@ const putPost = async () => {
       memo: post.value.memo
     };
 
-    const response = await axios.put(`http://localhost:8080/posts/${postNo}/update`, targetData);
+    await api.put(`/posts/${postNo}/update`, targetData);
+    return true;
   } catch (error) {
-    console.error('Error fetching post:', error);
+    console.error('Error updating post:', error);
+    alert('저장에 실패했습니다.');
+    return false;
   }
 };
 
-// 저장 버튼 동작
-function confirm() {
-  putPost();
-  router.push(`/postView/${postNo}`);
+// 저장이 끝난 뒤에만 이동
+async function confirm() {
+  if (await putPost()) router.push(`/postView/${postNo}`);
 }
 
-// Dropzone 초기화
 onMounted(() => {
-  var myDropzone = new Dropzone('#kt_dropzonejs_example_1', {
-    url: 'https://keenthemes.com/scripts/void.php', // 업로드 스크립트 URL
-    paramName: 'file', // 전송될 파일 이름
-    maxFiles: 10,
-    maxFilesize: 10, // 최대 파일 크기 (MB)
-    addRemoveLinks: true,
-    accept: function (file, done) {
-      if (file.name === 'wow.jpg') {
-        done("Naha, you don't.");
-      } else {
-        done();
-      }
-    },
-  });
-
   getPost();
 });
 </script>
@@ -265,19 +217,5 @@ p {
   height: 500px;
   /* contain : 사진 크기에 맞게, cover : carousel 에 맞게(이미지 잘림) */
   object-fit: contain;
-}
-
-/* Dropzone 테두리 제거 */
-.dropzone {
-  border: none; /* 테두리 제거 */
-  padding: 20px; /* 필요한 경우 내부 간격 추가 */
-}
-
-.dz-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%; /* 부모의 높이에 맞춰 중앙 정렬 */
 }
 </style>

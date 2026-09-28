@@ -159,7 +159,7 @@ import FollowButton from '@/components/common/FollowButton.vue';
 import PostView from '@/components/common/PostView.vue';
 import SearchUser from '@/components/common/SearchUser.vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import axios from 'axios';
+import api from '@/api';
 let postNos = ref([]);
 let nextNo;
 let next2No;
@@ -170,7 +170,7 @@ const auth = JSON.parse(localStorage.getItem('auth'));
 
 const fetchDistinctPostNos = async () => {
     try {
-        const response = await axios.get('http://localhost:8080/posts/images/distinct');
+        const response = await api.get('/posts/images/distinct');
         allPostNos.value = response.data; // 전체 데이터를 받아옴
         // 처음 5개의 데이터만 설정
         postNos.value = allPostNos.value.slice(0, 5);
@@ -226,7 +226,7 @@ const TopUser = ref([]);
 const getTop3Users = async () => {
     try {
         const nowDate = new Date();
-        const response = await axios.get(`http://localhost:8080/users/top3/${nowDate.getFullYear()}/${nowDate.getMonth() + 1}`);
+        const response = await api.get(`/users/top3/${nowDate.getFullYear()}/${nowDate.getMonth() + 1}`);
 
         TopUser.value = response.data;
         const formattedTotalAmount = response.data.map(item => ({
@@ -242,7 +242,7 @@ const getTop3Users = async () => {
 const TopPost = ref([]);
 const getTop3Posts = async () => {
     try {
-        const response = await axios.get('http://localhost:8080/posts/top3');
+        const response = await api.get('/posts/top3');
         TopPost.value = response.data;
         console.log('Top3', JSON.stringify(TopPost.value, null, 2)); // JSON 형식으로 출력
     } catch (error) {
@@ -254,7 +254,7 @@ const getTop3Posts = async () => {
 const users = ref([]);
 const getRecommendUsers = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${auth.user.user_no}/recommend5`);
+    const response = await api.get(`/users/${auth.user.user_no}/recommend5`);
     users.value = response.data;
 
     } catch (error) {

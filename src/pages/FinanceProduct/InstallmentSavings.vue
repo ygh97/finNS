@@ -213,7 +213,7 @@
 import Banner from '@/components/common/Banner.vue';
 import { useRouter } from 'vue-router';
 import { ref, computed, watch, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/api';
 
 const router = useRouter();
 
@@ -222,7 +222,7 @@ const dataList = ref([]);
 
 const getProducts = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/product/02');
+    const response = await api.get('/product/02');
     dataList.value = response.data;
   } catch (error) {
     console.error('Error fetching data:', error);  // 에러를 콘솔에 출력

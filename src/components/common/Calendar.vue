@@ -10,7 +10,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useRoute } from 'vue-router';
 import { getCurrentInstance, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/api';
 
 const route = useRoute();
 const userNo = route.params.userNo;
@@ -22,7 +22,7 @@ let calendar;
 
 const addCalendarEvent = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${userNo}/amountByDate`);
+    const response = await api.get(`/users/${userNo}/amountByDate`);
 
     let events = response.data.map(item => ({
       title: `${item.amount.toLocaleString()}원`, // amount 값을 포맷하여 title로 사용

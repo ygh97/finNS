@@ -172,6 +172,7 @@
 </template>
 
 <script setup>
+import api from '@/api';
 import Banner from '@/components/common/Banner.vue';
 import { useRouter } from 'vue-router';
 import { ref, computed, onMounted } from 'vue';
@@ -187,7 +188,7 @@ const cards = ref([]); // 카드 데이터를 담을 ref
 // 컴포넌트가 마운트될 때 데이터를 가져오기
 const getCards = async () => {
     try {
-        const response = await axios.get('http://localhost:8080/product/card');
+        const response = await api.get('/product/card');
         cards.value = response.data;
         console.log(cards);
     } catch (error) {

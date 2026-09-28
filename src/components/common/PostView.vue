@@ -216,7 +216,7 @@ import { ref, onMounted, nextTick } from 'vue';
 import "vue3-carousel/dist/carousel.css";
 import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '@/api';
 import { defineProps } from 'vue';
 
 const router = useRouter();
@@ -242,7 +242,7 @@ const isGreat = ref(null);
 // 서버에서 게시물 데이터를 가져오는 함수
 const fetchPost = async () => {
     try {
-        const response = await axios.get(`http://localhost:8080/posts/${props.postNo}`);
+        const response = await api.get(`/posts/${props.postNo}`);
         post.value = response.data; // 가져온 게시물 데이터를 저장
 
     } catch (error) {
@@ -253,7 +253,7 @@ const fetchPost = async () => {
 // isGreat 값을 가져오는 함수
 const fetchIsGreat = async () => {
     try {
-        const response = await axios.get(`http://localhost:8080/greatOrStupid/${auth.user.user_no}/${props.postNo}/isGreat`);
+        const response = await api.get(`/greatOrStupid/${props.postNo}/isGreat`);
         isGreat.value = response.data;
 
         goodisActive.value = isGreat.value === true; // isGreat가 true이면 goodisActive를 true로 설정
@@ -266,12 +266,11 @@ const fetchIsGreat = async () => {
 const toggleGreatOrStupid = async (greatOrStupid) => {
     try {
         const requestData = {
-            userNo: auth.user.user_no,
             postNo: props.postNo,
             greatOrStupid: greatOrStupid
         };
 
-        const response = await axios.put(`http://localhost:8080/greatOrStupid`, requestData);
+        const response = await api.put(`/greatOrStupid`, requestData);
         post.value.greatCount = response.data.greatCount;
         post.value.stupidCount = response.data.stupidCount;
 
@@ -343,7 +342,7 @@ const comments = ref([
 ]);
 const fetchComments = async () => {
     try {
-        const response = await axios.get(`http://localhost:8080/comment/${props.postNo}`);
+        const response = await api.get(`/comment/${props.postNo}`);
         comments.value = response.data;
     } catch (error) {
         console.error('Error fetching comments:', error);
@@ -360,11 +359,10 @@ const addComment = async () => {
     try {
         const requestData = {
             postNo: props.postNo,
-            userNo: auth.user.user_no,
             content: newComment.value,
         };
 
-        await axios.post('http://localhost:8080/comment', requestData);
+        await api.post('/comment', requestData);
 
         newComment.value = ''; 
         await fetchComments();

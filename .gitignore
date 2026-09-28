@@ -238,3 +238,6 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/vuejs,vue,macos,windows,visualstudiocode,node
+# 로컬 산출물
+*.zip
+vite.config.js.timestamp-*

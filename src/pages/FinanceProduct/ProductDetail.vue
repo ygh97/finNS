@@ -53,7 +53,7 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import { ref, reactive, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/api';
 
 const route = useRoute();
 const productData = reactive({});
@@ -62,7 +62,7 @@ const mtrtIntArray = ref([]);
 // 특정 금융 상품 조회 함수
 const getProductByNo = async (financeProductNo) => {
     try {
-        const response = await axios.get(`http://localhost:8080/product/no/${financeProductNo}`);
+        const response = await api.get(`/product/no/${financeProductNo}`);
         console.log(response.data);
         Object.assign(productData, response.data);
         if (productData.mtrtInt) {

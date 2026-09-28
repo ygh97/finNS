@@ -1,8 +1,5 @@
 <script setup>
 import authApi from '@/api/authApi';
-import followApi from '@/api/followApi';
-import FollowButton from '@/components/common/FollowButton.vue';
-
 import { useAuthStore } from '@/stores/auth';
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -14,17 +11,14 @@ const router = useRouter();
 
 // 아바타 처리를 위한 Ref
 const avatar = ref(null); // 아바타 파일 입력 참조
-const avatarPath = ref('/assets/media/avatars/blank.png'); // 기본 아바타 이미지 경로
+const avatarPath = ref(auth.state.user.img_url || '/assets/media/avatars/blank.png');
 
-// 회원 정보를 담고 있는 reactive 상태
+// 회원 정보 (아이디·생년월일·MBTI는 읽기 전용)
 const member = reactive({
   username: auth.state.user.username,
-  birth: auth.birth, // 추가: 생년월일
-  oldPassword: '',
-  newPassword: '',
-  newPassword2: '',
-  avatar: auth.img_url,
-  mbti_name: auth.state.user.mbti_name, // 추가: MBTI
+  birth: auth.birth,
+  mbti_name: auth.state.user.mbti_name,
+  avatar: null, // 새로 선택한 파일만 전송
 });
 
 // 비밀번호 변경 상태
@@ -62,50 +56,35 @@ const logout = (e) => {
 const onSubmit = async () => {
   if (!confirm('수정하시겠습니까?')) return;
 
-  // 새 비밀번호와 확인 비밀번호가 일치하는지 검사
   if (changePassword.newPassword !== changePassword.newPassword2) {
     error.value = '새 비밀번호가 일치하지 않습니다.';
     return;
   }
-
-  // 새 아바타 파일이 선택되었을 경우 member 객체에 업데이트
-  if (avatar.value && avatar.value.files.length > 0) {
-    member.avatar = avatar.value.files[0];
+  if (changePassword.newPassword && !changePassword.oldPassword) {
+    error.value = '이전 비밀번호를 입력해주세요.';
+    return;
   }
 
-  // changePassword의 값을 member에 합침
-  member.oldPassword = changePassword.oldPassword;
-  member.newPassword = changePassword.newPassword;
+  const formData = new FormData();
+  formData.append('username', member.username);
+  if (member.birth) {
+    formData.append('birth', moment(member.birth).format('YYYY-MM-DD'));
+  }
+  if (member.mbti_name) formData.append('mbti_name', member.mbti_name);
+  formData.append('oldPassword', changePassword.oldPassword);
+  formData.append('newPassword', changePassword.newPassword);
+  if (member.avatar) formData.append('avatar', member.avatar);
 
-
-// FormData 객체 생성
-const formData = new FormData();
-formData.append('username', member.username);
-
-if (member.birth) {
-  formData.append('birth', moment(member.birth).format('YYYY-MM-DD'));
-}
-formData.append('mbti_name', member.mbti_name);
-
-// 비밀번호 변경 관련 정보 추가
-formData.append('oldPassword', changePassword.oldPassword);  // 수정된 부분
-formData.append('newPassword', changePassword.newPassword);  // 수정된 부분
-
-// 아바타가 있을 경우 FormData에 추가
-if (member.avatar) {
-  formData.append('avatar', member.avatar);
-}
-
-  // API 호출을 통한 프로필 업데이트 시도
   try {
-    await authApi.update(member);
+    const updated = await authApi.update(member.username, formData);
     error.value = '';
-    auth.changeProfile(member);
+    auth.changeProfile(updated);
+    Object.assign(changePassword, { oldPassword: '', newPassword: '', newPassword2: '' });
     alert('정보를 수정하였습니다.');
   } catch (e) {
-    // 오류 메시지를 상세하게 출력
-    console.error('업데이트 에러:', e.response);
-    error.value = e.response?.data?.message || '오류가 발생했습니다.';
+    // 서버 오류 응답은 text/plain 문자열
+    const data = e.response?.data;
+    error.value = typeof data === 'string' && data ? data : '오류가 발생했습니다.';
   }
 };
 // 아바타 편집 핸들러 (파일 입력 트리거)
@@ -117,7 +96,7 @@ const onEditAvatar = () => {
 const onAvatarChange = (event) => {
   const file = event.target.files[0];
   if (file) {
-    // 새로운 이미지의 URL을 생성하고 avatarPath 업데이트
+    member.avatar = file;
     avatarPath.value = URL.createObjectURL(file);
   }
 };
@@ -130,7 +109,6 @@ const onDeleteAvatar = () => {
 };
 
 const goToProfile = () => {
-  console.log(auth);
   router.push(`/profile/${auth.state.user.user_no}/spending`)
 };
 
@@ -190,6 +168,7 @@ const goToProfile = () => {
                 class="form-control"
                 id="username"
                 v-model="member.username"
+                readonly
               />
             </div>
           </div>

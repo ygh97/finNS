@@ -19,20 +19,17 @@
   </div>
 
   <!--begin::Container-->
-  <div class="container-xxl">
+  <div class="container-xxl" style="margin-bottom: 150px;">
     <!--begin::Navbar-->
     <!-- '나의 MBTI' 관련 섹션 -->
     <div class="card-body pt-9 pb-0">
       <!--begin::Details-->
       <div class="d-flex flex-wrap flex-sm-nowrap">
         <!--begin: Pic-->
-        <div class="me-10" style="margin-left: 110px">
+        <div class="me-10" style="margin-left: 230px">
           <!-- MBTI 프로필 사진을 보여주는 부분에서 mbti_no 사용 -->
           <img
-            :src="
-              user?.mbtiName
-                ? mbtiData.get(user.mbtiName)?.img_url : mbtiData.get('default').img_url
-            "
+            :src="mbti.img_url"
             alt="MBTI Image"
           />
         </div>
@@ -56,10 +53,7 @@
               <div class="d-flex flex-wrap fw-semibold fs-3 mb-4 pe-2 mt-4">
                 <p
                   class="align-items-center text-gray-800 me-5 mb-2"
-                  v-html="
-                    user?.mbtiName
-                      ? mbtiData.get(user.mbtiName).description : mbtiData.get('default').description
-                  "
+                  v-html="mbti.description"
                 ></p>
               </div>
 
@@ -475,8 +469,8 @@
 
 <script setup>
 import Banner from '@/components/common/Banner.vue';
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import { ref, computed, onMounted } from 'vue';
+import api from '@/api';
 
 const auth = JSON.parse(localStorage.getItem('auth'));
 const user = ref(null);
@@ -484,7 +478,7 @@ const user = ref(null);
 // 서버에서 유저 데이터를 가져오는 함수
 const fetchUser = async () => {
     try {
-        const response = await axios.get(`http://localhost:8080/users/${auth.user.user_no}`);
+        const response = await api.get(`/users/${auth.user.user_no}`);
         user.value = response.data;
         console.log(user.value);
 
@@ -566,6 +560,9 @@ const mbtiData = new Map([
   ],
 ]);
 
+// 진단 전이거나 목록에 없는 MBTI(예: 이전에 저장된 '기타')는 기본 안내로 표시
+const mbti = computed(() => mbtiData.get(user.value?.mbtiName) ?? mbtiData.get('default'));
+
 onMounted(() => {
   fetchUser();
 });
@@ -603,6 +600,7 @@ onMounted(() => {
   background-color: #f8f9fa;
   transform: rotateY(180deg);
 }
+
 
 .card-container:hover .card {
   transform: rotateY(180deg);

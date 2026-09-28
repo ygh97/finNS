@@ -72,15 +72,13 @@ export const useAuthStore = defineStore('auth', () => {
     const auth = localStorage.getItem('auth');
     if (auth != null) {
       state.value = JSON.parse(auth);
-      console.log('스토어 로드된 state:', state.value); // 확인 로그
+      // console.log('스토어 로드된 state:', state.value); // 확인 로그
     }
   };
 
+  // 서버가 돌려준 회원 정보 중 수정 가능한 값만 반영
   const changeProfile = (member) => {
-    state.value.user.userName = member.userName; // userName 업데이트
-    state.value.user.email = member.email; // email 업데이트
-    state.value.user.birth = moment(member.birth).format('YYYY-MM-DD'); // birth 업데이트
-    state.value.user.mbtiName = member.mbtiName; // mbti 업데이트
+    if (member.img_url) state.value.user.img_url = member.img_url;
     localStorage.setItem('auth', JSON.stringify(state.value));
   };
 

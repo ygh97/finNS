@@ -65,6 +65,7 @@
 </template>
 
 <script setup>
+import api from '@/api';
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
@@ -96,7 +97,7 @@ const categoryMap = new Map([
 const togglePublicStatus = async (postNo) => {
   // 디비에 공개 범위 바꾸는 코드
   try {
-    const response = await axios.put(`http://localhost:8080/posts/${postNo}/togglePublicStatus`);
+    const response = await api.put(`/posts/${postNo}/togglePublicStatus`);
 
   } catch (error) {
     console.error('Error toggling public status:', error);

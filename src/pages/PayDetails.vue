@@ -112,7 +112,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '@/api';
 import Banner from '@/components/common/Banner.vue';
 
 const route = useRoute();
@@ -132,7 +132,7 @@ let post = ref({
 
 const getPost = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/posts/${postNo}`);
+    const response = await api.get(`/posts/${postNo}`);
     post.value = response.data;
   } catch (error) {
     console.error('Error fetching post:', error);
@@ -155,15 +155,18 @@ const putPost = async () => {
       memo: post.value.memo
     };
 
-    const response = await axios.put(`http://localhost:8080/posts/${postNo}/update`, targetData);
+    await api.put(`/posts/${postNo}/update`, targetData);
+    return true;
   } catch (error) {
-    console.error('Error fetching post:', error);
+    console.error('Error updating post:', error);
+    alert('저장에 실패했습니다.');
+    return false;
   }
 };
 
-function confirm() {
-  putPost();
-  router.go(-1);
+// 저장이 끝난 뒤에만 이동
+async function confirm() {
+  if (await putPost()) router.go(-1);
 }
 </script>
 

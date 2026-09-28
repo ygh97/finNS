@@ -215,6 +215,7 @@
 </template>
 
 <script setup>
+import api from '@/api';
 import Banner from '@/components/common/Banner.vue';
 import { useRouter } from 'vue-router';
 import { ref, computed, watch, onMounted } from 'vue';
@@ -226,7 +227,7 @@ const dataList = ref([]);
 
 const getProducts = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/product/01');
+    const response = await api.get('/product/01');
     dataList.value = response.data;
     // console.log(dataList.value);
   } catch (error) {

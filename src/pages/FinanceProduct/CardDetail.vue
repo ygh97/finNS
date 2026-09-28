@@ -54,7 +54,7 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import { ref, reactive, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/api';
 
 const route = useRoute();
 const productData = reactive({});
@@ -76,7 +76,7 @@ const parseBenefitDetail = (benefitDetail) => {
 // 특정 카드 상품 조회 함수
 const getProductByNo = async (cardNo) => {
     try {
-        const response = await axios.get(`http://localhost:8080/product/card/${cardNo}`);
+        const response = await api.get(`/product/card/${cardNo}`);
         console.log(response.data);
         Object.assign(productData, response.data);
         feeArray.value = parseExInFor(productData.exInFor);

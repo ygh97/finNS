@@ -35,7 +35,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/api';
 import FollowButton from './FollowButton.vue';
 import moment from 'moment';
 import { useRoute } from 'vue-router';
@@ -49,7 +49,7 @@ const getFollowingList = async () => {
   try {
     console.log('사용자 번호:', userNo);
     
-    const response = await axios.get(`http://localhost:8080/users/${userNo}/following/${auth.user.user_no}`);
+    const response = await api.get(`/users/${userNo}/following`);
     console.log('서버 응답:', response);
 
     users.value = response.data;

@@ -69,7 +69,7 @@
 <script setup>
 import FollowButton from './FollowButton.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import axios from 'axios';
+import api from '@/api';
 import router from '@/router';
 
 const auth = JSON.parse(localStorage.getItem('auth'));
@@ -77,7 +77,7 @@ const auth = JSON.parse(localStorage.getItem('auth'));
 const users = ref([]);
 const getUsers = async () => {
     try {
-        const response = await axios.get(`http://localhost:8080/users/search/${auth.user.user_no}`);
+        const response = await api.get(`/users/search`);
         users.value = response.data;
     } catch (error) {
         console.error('Error fetching getUsers value:', error);
@@ -87,7 +87,7 @@ const getUsers = async () => {
 const recentUsers = ref([]);
 const getRecentUsers = async () => {
     try {
-        const response = await axios.get(`http://localhost:8080/users/${auth.user.user_no}/recentUser`);
+        const response = await api.get(`/recentUser`);
         recentUsers.value = response.data;
         console.log(recentUsers.value);
     } catch (error) {
@@ -121,7 +121,7 @@ const searchUsers = async () => {
 
 const insertRecentUser = async (userNo) => {
   try {
-      const response = await axios.put(`http://localhost:8080/recentUser/${auth.user.user_no}/${userNo}`);
+      const response = await api.put(`/recentUser/${userNo}`);
       router.push(`/profile/${userNo}/spending`);
   } catch (error) {
       console.error('Error fetching insertRecentUser value:', error);

@@ -34,9 +34,10 @@ export default {
       throw error;
     }
   },
-  async update(member) {
+  // formData: username, birth, mbti_name, oldPassword, newPassword, avatar(선택)
+  async update(username, formData) {
     try {
-      const { data } = await api.put(`${BASE_URL}/${member.username}`, member, {
+      const { data } = await api.put(`${BASE_URL}/${username}`, formData, {
         headers,
       });
       console.log('AUTH PUT: ', data);

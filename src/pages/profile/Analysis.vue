@@ -62,6 +62,7 @@
 </template>
 
 <script setup>
+import api from '@/api';
 import DataTables from '@/components/common/DataTables.vue'
 import CardComponent from '@/components/common/CardComponent.vue';
 import Banner from '@/components/common/Banner.vue';
@@ -93,7 +94,7 @@ let isListVisible = ref(false); // 테이블 표시 여부
 
 const fetchSortedCategories = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${userNo}/amountByCategory`);
+    const response = await api.get(`/users/${userNo}/amountByCategory`);
     sortedCategories.value = response.data;
     
   } catch (error) {
@@ -165,10 +166,10 @@ const getPostsByCategory = async (category) => {
     const postRequestByCategoryDTO = {
       userNo: userNo,
       category: category,
-      isOnlyPublic: userNo == auth.user.user_no ? true : false
+      isOnlyPublic: userNo != auth.user.user_no
     }
 
-    const response = await axios.post(`http://localhost:8080/posts/byCategory`, postRequestByCategoryDTO);
+    const response = await api.post(`/posts/byCategory`, postRequestByCategoryDTO);
     totalList.value = response.data;
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -205,7 +206,7 @@ onMounted(async () => {
 const cards = ref([]);
 const getRecommend3Cards = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${userNo}/recommendCards/3`);
+    const response = await api.get(`/users/${userNo}/recommendCards/3`);
     cards.value = response.data;
   } catch (error) {
     console.error('Error fetching data:', error);

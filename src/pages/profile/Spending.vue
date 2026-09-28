@@ -23,7 +23,7 @@ import Calendar from '@/components/common/Calendar.vue'
 import DataTables from '@/components/common/DataTables.vue'
 import { getCurrentInstance, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import axios from 'axios';
+import api from '@/api';
 
 const route = useRoute();
 
@@ -47,7 +47,7 @@ const dayClick = async (date) => {
     };
 
     // 서버에 요청 보내기
-    const response = await axios.post('http://localhost:8080/posts/byDate', postRequestByDateDTO);
+    const response = await api.post('/posts/byDate', postRequestByDateDTO);
 
     // 요청에 성공하면 totalList를 서버에서 받은 데이터로 업데이트
     totalList.value = response.data;

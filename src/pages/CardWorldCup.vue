@@ -1,12 +1,9 @@
 <template>
-  <div class="title-box">
-    <h1 class="title">카드 월드컵</h1>
-    <p class="sub-title">더 마음에 드는 카드를 골라주세요</p>
-  </div>
+  <Banner titleText="카드 월드컵" descriptionText="더 마음에 드는 카드를 골라주세요." />
+
   <!-- 라운드 및 진행 상황 표시 -->
   <div v-if="matchcard.length === 2">
     <h1 class="match">
-      카드 월드컵
       <span v-if="roundLabel === '결승전!'">결승전</span>
       <span v-else> {{ roundLabel }} {{ currentSelection }} / {{ totalSelectionsInRound }} </span>
     </h1>
@@ -27,6 +24,8 @@
 </template>
 
 <script setup>
+import api from '@/api';
+import Banner from '@/components/common/Banner.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -53,7 +52,7 @@ const roundLabel = computed(() => {
 });
 const getRecommend8Cards = async () => {
   try {
-    const response = await axios.get(`http://localhost:8080/users/${auth.user.user_no}/recommendCards/8`);
+    const response = await api.get(`/users/${auth.user.user_no}/recommendCards/8`);
     cards.value = response.data;
     cards.value.forEach((card) => {
       if (card.benefit) {
@@ -180,7 +179,6 @@ onMounted(async () => {
 .match {
   text-align: center; /* 텍스트를 중앙 정렬 */
   font-size: 32px; /* 텍스트 크기 설정 */
-  font-weight: bold; /* 텍스트 굵게 설정 */
   margin-top: 30px; /* 상단 여백 설정 */
   margin-bottom: 50px;
 }
