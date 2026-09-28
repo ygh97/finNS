@@ -6,23 +6,25 @@ import com.finns.follow.exception.AlreadyFollowingException;
 import com.finns.follow.exception.FollowNotFoundException;
 import com.finns.follow.service.FollowService;
 import com.finns.member.dto.MemberDTO;
+import com.finns.security.account.domain.CustomUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// 팔로우하는 주체는 항상 로그인한 사용자
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173") // 클라이언트의 도메인을 허용
 public class FollowController {
 
     private final FollowService followService;
 
-    @PostMapping("/follow/{user_no}/{to_user_no}")
-    public ResponseEntity<String> follow(@PathVariable int user_no, @PathVariable int to_user_no) {
-        FollowDTO followDTO = new FollowDTO(user_no, to_user_no);
+    @PostMapping("/follow/{to_user_no}")
+    public ResponseEntity<String> follow(@PathVariable int to_user_no, @AuthenticationPrincipal CustomUser user) {
+        FollowDTO followDTO = new FollowDTO(user.getMember().getUser_no(), to_user_no);
         try {
             followService.follow(followDTO);
             return ResponseEntity.ok("Followed successfully");
@@ -31,9 +33,9 @@ public class FollowController {
         }
     }
 
-    @DeleteMapping("/unfollow/{user_no}/{to_user_no}")
-    public ResponseEntity<String> unfollow(@PathVariable int user_no, @PathVariable int to_user_no) {
-        FollowDTO followDTO = new FollowDTO(user_no, to_user_no);
+    @DeleteMapping("/follow/{to_user_no}")
+    public ResponseEntity<String> unfollow(@PathVariable int to_user_no, @AuthenticationPrincipal CustomUser user) {
+        FollowDTO followDTO = new FollowDTO(user.getMember().getUser_no(), to_user_no);
         try {
             followService.unfollow(followDTO);
             return ResponseEntity.ok("Unfollowed successfully");
@@ -42,16 +44,14 @@ public class FollowController {
         }
     }
 
-    @GetMapping("/users/{user_no}/follower/{auth_no}")
-    public ResponseEntity<List<MemberDTO>> getFollowerList(@PathVariable int user_no, @PathVariable int auth_no) {
-        List<MemberDTO> followerList = followService.getFollowerList(user_no, auth_no);
-        return ResponseEntity.ok(followerList);
+    @GetMapping("/users/{user_no}/follower")
+    public ResponseEntity<List<MemberDTO>> getFollowerList(@PathVariable int user_no, @AuthenticationPrincipal CustomUser user) {
+        return ResponseEntity.ok(followService.getFollowerList(user_no, user.getMember().getUser_no()));
     }
 
-    @GetMapping("/users/{user_no}/following/{auth_no}")
-    public ResponseEntity<List<MemberDTO>> getFollowingList(@PathVariable int user_no, @PathVariable int auth_no) {
-        List<MemberDTO> followingList = followService.getFollowingList(user_no, auth_no);
-        return ResponseEntity.ok(followingList);
+    @GetMapping("/users/{user_no}/following")
+    public ResponseEntity<List<MemberDTO>> getFollowingList(@PathVariable int user_no, @AuthenticationPrincipal CustomUser user) {
+        return ResponseEntity.ok(followService.getFollowingList(user_no, user.getMember().getUser_no()));
     }
 
     @GetMapping("/users/{user_no}/followCounts")
@@ -61,15 +61,7 @@ public class FollowController {
     }
 
     @GetMapping("/followingcheck")
-    public ResponseEntity<Boolean> checkFollowing(
-            @RequestParam long user_no,
-            @RequestParam long to_user_no) {
-        boolean Following = followService.isFollowing(user_no, to_user_no);
-        return ResponseEntity.ok(Following);
+    public ResponseEntity<Boolean> checkFollowing(@RequestParam long to_user_no, @AuthenticationPrincipal CustomUser user) {
+        return ResponseEntity.ok(followService.isFollowing(user.getMember().getUser_no(), to_user_no));
     }
-
-
-
-
-
 }

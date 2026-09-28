@@ -42,6 +42,9 @@ public class CardService {
 
     public List<Card> getRecommendNCards(Long userNo, int num) {
         String topCategoryByUser = amountByCategoryService.calculateTopCategory(userNo);
+        if (topCategoryByUser == null) { // 분석할 소비 내역 없음
+            return Collections.emptyList();
+        }
         String cardCategory = matchingCategory(topCategoryByUser);
         RecommendNCardRequestDTO recommendNCardRequestDTO = new RecommendNCardRequestDTO(cardCategory, num);
 

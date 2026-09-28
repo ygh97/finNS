@@ -74,18 +74,21 @@
     <update id="updatePublicStatus">
         UPDATE post
         SET public_status = NOT public_status
-        WHERE post_no = #{postNo}
+        WHERE post_no = #{postNo} AND user_no = #{userNo}
     </update>
 
     <update id="updatePost" parameterType="com.finns.post.dto.UpdatePostDetailDTO">
         UPDATE post
         SET public_status = #{publicStatus}, category = #{category}, memo = #{memo}
-        WHERE post_no = #{postNo}
+        WHERE post_no = #{postNo} AND user_no = #{userNo}
     </update>
 
+    <!-- 메인 피드: 이미지가 있는 공개 게시글 -->
     <select id="selectDistinctPostNos" resultType="long">
-        SELECT DISTINCT post_no
-        FROM post_img
+        SELECT DISTINCT pi.post_no
+        FROM post_img pi
+                 JOIN post p ON pi.post_no = p.post_no
+        WHERE p.public_status = true
     </select>
 
     <select id="selectImagesByPostNo" parameterType="long" resultType="string">
@@ -124,6 +127,7 @@
     <select id="getTop3PostsByGreatCount" resultType="com.finns.post.dto.PostResponseDTO">
         SELECT *
         FROM post
+        WHERE public_status = true
         ORDER BY great_count DESC
             LIMIT 3
     </select>

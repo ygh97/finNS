@@ -26,21 +26,15 @@ public class MemberUpdateDTO {
 
     private MultipartFile avatar; // 접근 제어자 추가
 
-    // `toVO()` 메서드에서 `newPassword`가 존재할 경우 설정
-    public MemberVO toVO(String encodedPassword) {
-        // 만약 새 비밀번호가 없다면 기존 비밀번호를 유지
-        String finalPassword = (encodedPassword != null && !encodedPassword.isEmpty()) ? encodedPassword : this.oldPassword;
-
+    // encodedPassword: 암호화된 새 비밀번호 또는 기존 비밀번호, imgUrl: 새 아바타 경로(없으면 null → 기존 유지)
+    public MemberVO toVO(String encodedPassword, String imgUrl) {
         return MemberVO.builder()
                 .user_no(user_no)
                 .username(username)
-                .oldPassword(oldPassword)
-                .newPassword(newPassword)
-                .password(finalPassword) // 암호화된 비밀번호 사용 또는 기존 비밀번호 유지
+                .password(encodedPassword)
                 .birth(birth)
                 .mbti_name(mbti_name)
-                .img_url(img_url)
-                .authList(null) // 권한 정보는 필요에 따라 설정
+                .img_url(imgUrl)
                 .build();
     }
 }

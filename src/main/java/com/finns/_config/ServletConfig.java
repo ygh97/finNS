@@ -24,6 +24,9 @@ public class ServletConfig  implements WebMvcConfigurer {
                 .addResourceLocations("/resources/");
         registry.addResourceHandler("/assets/**")
                 .addResourceLocations("/resources/assets/");
+        // 업로드된 아바타 이미지 (MemberServiceImpl.saveAvatar 저장 위치)
+        registry.addResourceHandler("/upload/**")
+                .addResourceLocations("file:///c:/upload/");
     }
 
 

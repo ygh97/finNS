@@ -1,11 +1,7 @@
 package com.finns.user.service;
 
 import com.finns.Mbti;
-import com.finns.amountByCategory.dto.AmountByCategory;
-import com.finns.amountByCategory.mapper.AmountByCategoryMapper;
 import com.finns.amountByCategory.service.AmountByCategoryService;
-import com.finns.follow.service.FollowService;
-import com.finns.recentUser.dto.RecentUserResponseDTO;
 import com.finns.user.dto.*;
 import com.finns.user.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +10,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -29,44 +23,33 @@ public class UserService {
 
     private final UserMapper userMapper;
     private final AmountByCategoryService amountByCategoryService;
-    private final FollowService followService;
 
     public User getUser(Long userNo) {
         return Optional.ofNullable(userMapper.selectOne(userNo))
                 .orElseThrow(NoSuchElementException::new);
     }
 
+    // 팔로우 여부(follow)는 쿼리에서 함께 계산
     public List<SearchUserDTO> getUsers(Long userNo) {
-        List<SearchUserDTO> searchedUsers = userMapper.selectAll(userNo);
-        for (SearchUserDTO searchedUser : searchedUsers) {
-            boolean isFollow = followService.isFollowing(userNo, searchedUser.getUserNo());
-            searchedUser.setFollow(isFollow);
-        }
-        return Optional.of(searchedUsers)
-                .orElseThrow(NoSuchElementException::new);
+        return userMapper.selectAll(userNo);
     }
 
     public List<UserTop3DTO> getTop3ForAmountByDate(YearAndMonthDTO yearAndMonthDTO) {
-        return Optional.ofNullable(userMapper.selectTop3ForAmountByDate(yearAndMonthDTO))
-                .orElseThrow(NoSuchElementException::new);
+        return userMapper.selectTop3ForAmountByDate(yearAndMonthDTO);
     }
 
     public List<UserRecommendResponseDTO> getRecommend5ByMbti(UserRecommendRequestDTO userRecommendRequestDTO) {
-        List<UserRecommendResponseDTO> userRecommendResponseDTOS = userMapper.selectRecommend5ByMbti(userRecommendRequestDTO);
-        for (UserRecommendResponseDTO userRecommendResponseDTO : userRecommendResponseDTOS) {
-            boolean isFollow = followService.isFollowing(userRecommendRequestDTO.getUserNo(), userRecommendResponseDTO.getUserNo());
-            userRecommendResponseDTO.setFollow(isFollow);
-        }
-        return Optional.of(userRecommendResponseDTOS)
-                .orElseThrow(NoSuchElementException::new);
+        return userMapper.selectRecommend5ByMbti(userRecommendRequestDTO);
     }
 
     @Transactional
     public void setMbtiByCategory(Long userNo) {
         String topCategory = amountByCategoryService.calculateTopCategory(userNo);
+        if (topCategory == null) {
+            throw new NoSuchElementException("MBTI를 분석할 소비 내역이 없습니다.");
+        }
         String mbtiName = Mbti.getMbtiNameByCategory(topCategory);
         SetMbtiDTO setMbtiDTO = new SetMbtiDTO(userNo, mbtiName);
         userMapper.updateMbti(setMbtiDTO);
     }
-
 }

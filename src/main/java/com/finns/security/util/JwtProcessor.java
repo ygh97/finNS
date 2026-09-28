@@ -1,9 +1,8 @@
 package com.finns.security.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -11,11 +10,13 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
-public class JwtProcessor { // 헬퍼클래스란?
-    static private final long TOKEN_VALID_MILISECOND = 1000L * 60 * 5; // 5 분
-    private String secretKey = "충분히 긴 임의의(랜덤한) 비밀키 문자열 배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf배정asdfasdasdasdf ";
-    private Key key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-// private Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256); -- 운영시 사용
+public class JwtProcessor {
+    static private final long TOKEN_VALID_MILISECOND = 1000L * 60 * 60 * 2; // 2시간
+    private final Key key;
+
+    public JwtProcessor(@Value("${jwt.secret}") String secretKey) {
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    }
 
     // JWT 생성
     public String generateToken(String subject) {
@@ -27,9 +28,9 @@ public class JwtProcessor { // 헬퍼클래스란?
                 .compact();
     }
 
-    // JWT Subject(username) 추출 - 해석 불가인 경우 예외 발생
-// 예외 ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException,
-// IllegalArgumentException
+    // JWT Subject(username) 추출 - 서명 오류, 만료 등 해석 불가인 경우 예외 발생
+    // 예외 ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException,
+    // IllegalArgumentException
     public String getUsername(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -37,14 +38,5 @@ public class JwtProcessor { // 헬퍼클래스란?
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-    }
-
-    // JWT 검증(유효 기간 검증) - 해석 불가인 경우 예외 발생
-    public boolean validateToken(String token) {
-        Jws<Claims> claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
-        return true;
     }
 }

@@ -250,3 +250,6 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,intellij,gradle
 
 src/main/resources/application.properties
+# 로컬 도구 산출물
+.smarttomcat/
+*.zip

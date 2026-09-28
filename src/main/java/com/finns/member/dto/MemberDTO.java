@@ -33,12 +33,12 @@ public class MemberDTO {
 
     public static MemberDTO of(MemberVO m) {
         return MemberDTO.builder()
+                .user_no(m.getUser_no())
                 .username(m.getUsername())
-                .password(m.getPassword())
                 .birth(m.getBirth())
                 .mbti_name(m.getMbti_name())
                 .img_url(m.getImg_url())
-
+                .renew_time(m.getRenew_time())
                 .authList(m.getAuthList().stream().map(a->a.getAuthority()).toList())
                 .build();
     }

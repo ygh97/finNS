@@ -3,7 +3,6 @@ package com.finns.security.filter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.finns.security.util.JwtProcessor;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,10 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService; //의존 객체
 
     private Authentication getAuthentication(String token) {
-        if (!jwtProcessor.validateToken(token)) {
-            throw new BadCredentialsException("Invalid JWT token");
-        }
-        String username = jwtProcessor.getUsername(token);
+        String username = jwtProcessor.getUsername(token); // 서명·만료 검증 실패 시 예외
         UserDetails principal = userDetailsService.loadUserByUsername(username);
         return new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
     }

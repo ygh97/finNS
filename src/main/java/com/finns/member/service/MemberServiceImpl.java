@@ -18,11 +18,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
+    private static final String DEFAULT_AVATAR = "/assets/media/avatars/blank.png";
+
     final PasswordEncoder passwordEncoder;
     final MemberMapper mapper;
 
@@ -39,7 +42,8 @@ public class MemberServiceImpl implements MemberService {
         return MemberDTO.of(member);
     }
 
-    private String saveAvatar(MultipartFile avatar, String username) {
+    // 아바타 저장 후 img_url 경로 반환, 아바타가 없으면 null
+    private String saveAvatar(MultipartFile avatar) {
         // 아바타 업로드
         if (avatar != null && !avatar.isEmpty()) {
             // 파일 확장자 가져오기
@@ -68,11 +72,12 @@ public class MemberServiceImpl implements MemberService {
                 }
             }
 
-            // 저장할 파일 경로 설정 (확장자를 유지)
-            File dest = new File(uploadDir, username + extension);
+            // 저장할 파일 경로 설정 - 사용자 입력이 파일명에 들어가지 않도록 UUID 사용 (확장자 유지)
+            String fileName = UUID.randomUUID() + extension;
+            File dest = new File(uploadDir, fileName);
             try {
                 avatar.transferTo(dest);  // 파일 저장
-                return "/upload/avatar/" + username + extension;  // img_url 경로 반환
+                return "/upload/avatar/" + fileName;  // img_url 경로 반환
             } catch (IOException e) {
                 log.error("아바타 파일 저장 중 오류 발생: {}", e.getMessage());
                 throw new RuntimeException("아바타 파일 저장 중 오류가 발생했습니다.", e);
@@ -89,12 +94,13 @@ public class MemberServiceImpl implements MemberService {
     public MemberDTO join(MemberJoinDTO dto) {
         MemberVO member = dto.toVO();
         member.setPassword(passwordEncoder.encode(member.getPassword())); // 비밀번호 암호화
+        String imgUrl = saveAvatar(dto.getAvatar());
+        member.setImg_url(imgUrl != null ? imgUrl : DEFAULT_AVATAR); // 화면이 img_url을 그대로 쓰므로 비워두지 않음
         mapper.insert(member);
         AuthVO authority = new AuthVO();
         authority.setUsername(member.getUsername());
         authority.setAuthority("ROLE_MEMBER");
         mapper.insertAuth(authority);
-        saveAvatar(dto.getAvatar(), member.getUsername());
         return get(member.getUsername());
     }
 
@@ -105,25 +111,18 @@ public class MemberServiceImpl implements MemberService {
         MemberVO vo = Optional.ofNullable(mapper.get(member.getUsername()))
                 .orElseThrow(() -> new NoSuchElementException("회원 정보를 찾을 수 없습니다."));
 
-        // 현재 비밀번호 확인 (비밀번호가 변경되는 경우에만 확인)
-        if (member.getOldPassword() != null && !member.getOldPassword().isEmpty()
-                && !passwordEncoder.matches(member.getOldPassword(), vo.getPassword())) {
-            throw new PasswordMissmatchException("현재 비밀번호가 일치하지 않습니다.");
+        // 비밀번호를 바꾸려면 현재 비밀번호가 반드시 맞아야 한다
+        String encodedPassword = vo.getPassword(); // 기존 비밀번호 유지
+        if (member.getNewPassword() != null && !member.getNewPassword().isEmpty()) {
+            if (member.getOldPassword() == null
+                    || !passwordEncoder.matches(member.getOldPassword(), vo.getPassword())) {
+                throw new PasswordMissmatchException("현재 비밀번호가 일치하지 않습니다.");
+            }
+            encodedPassword = passwordEncoder.encode(member.getNewPassword());
         }
 
-        // 새로운 비밀번호가 존재하면 암호화된 비밀번호 사용, 그렇지 않으면 기존 비밀번호 사용
-        String encodedPassword = (member.getNewPassword() != null && !member.getNewPassword().isEmpty())
-                ? passwordEncoder.encode(member.getNewPassword()) // 비밀번호를 암호화
-                : vo.getPassword(); // 기존 비밀번호 유지
-
-        // 업데이트할 `MemberVO` 객체 생성
-        MemberVO updatedVO = member.toVO(encodedPassword);
-
-        // 데이터베이스 업데이트
-        mapper.update(updatedVO);  // 암호화된 비밀번호 전달
-
-        // 아바타 업데이트
-        saveAvatar(member.getAvatar(), member.getUsername());
+        // 새 아바타가 있을 때만 img_url 변경
+        mapper.update(member.toVO(encodedPassword, saveAvatar(member.getAvatar())));
 
         return get(member.getUsername());
     }

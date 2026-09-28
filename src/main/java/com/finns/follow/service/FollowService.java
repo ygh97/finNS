@@ -34,19 +34,16 @@ public class FollowService {
         followMapper.deleteFollow(followDTO);
     }
 
-    public List<MemberDTO> getFollowingList(int user_no, int auth_no) {
-        List<MemberVO> followingList = followMapper.selectFollowingByUserNo(user_no);
-        return followingList.stream()
+    // viewer_no: 목록을 보는 사용자. 각 사용자를 viewer가 팔로우하는지 쿼리에서 함께 계산한다
+    public List<MemberDTO> getFollowingList(int user_no, int viewer_no) {
+        return followMapper.selectFollowingByUserNo(user_no, viewer_no).stream()
                 .map(this::convertToDTO)
-                .peek(dto -> dto.setFollowing(isFollowing(auth_no, dto.getUser_no())))
                 .collect(Collectors.toList());
     }
 
-    public List<MemberDTO> getFollowerList(int user_no, int auth_no) {
-        List<MemberVO> followerList = followMapper.selectFollowerByUserNo(user_no);
-        return followerList.stream()
+    public List<MemberDTO> getFollowerList(int user_no, int viewer_no) {
+        return followMapper.selectFollowerByUserNo(user_no, viewer_no).stream()
                 .map(this::convertToDTO)
-                .peek(dto -> dto.setFollowing(isFollowing(auth_no, dto.getUser_no())))
                 .collect(Collectors.toList());
     }
 
@@ -62,7 +59,7 @@ public class FollowService {
                 .mbti_name(vo.getMbti_name())
                 .img_url(vo.getImg_url())
                 .renew_time(vo.getRenew_time())
-                .following(false) // 기본값을 false로 설정
+                .following(vo.isFollowing())
                 .build();
     }
 
@@ -71,40 +68,4 @@ public class FollowService {
         int followingCount = followMapper.countFollowing(user_no);
         return new FollowCountDTO(followerCount, followingCount);
     }
-
-
-//        @Transactional
-//        public void follow(FollowDTO followDTO) {
-//            if (isFollowing(followDTO.getUser_no(), followDTO.getTo_user_no())) {
-//                throw new AlreadyFollowingException("이미 팔로우 중인 사용자입니다.");
-//            }
-//            followMapper.insertFollow(followDTO);
-//        }
-//
-//        @Transactional
-//        public void unfollow(FollowDTO followDTO) {
-//            if (!isFollowing(followDTO.getUser_no(), followDTO.getTo_user_no())) {
-//                throw new FollowNotFoundException("팔로우 관계가 존재하지 않습니다.");
-//            }
-//            followMapper.deleteFollow(followDTO);
-//        }
-//
-//        public List<MemberDTO> getFollowingList(int user_no) {
-//            List<MemberDTO> followingList = followMapper.selectFollowingByUserNo(user_no);
-//            return followingList.stream()
-//                    .peek(dto -> dto.setFollowing(true))
-//                    .collect(Collectors.toList());
-//        }
-//
-//        public List<MemberDTO> getFollowerList(int user_no) {
-//            List<MemberDTO> followerList = followMapper.selectFollowersByUserNo(user_no);
-//            return followerList.stream()
-//                    .peek(dto -> dto.setFollowing(isFollowing(user_no, dto.getUser_no())))
-//                    .collect(Collectors.toList());
-//        }
-//
-//        private boolean isFollowing(int user_no, int to_user_no) {
-//            return followMapper.checkFollowExists(user_no, to_user_no) > 0;
-//        }
-//    }
 }

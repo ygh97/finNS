@@ -5,7 +5,8 @@
 
 <mapper namespace="com.finns.recentUser.mapper.RecentUserMapper">
     <select id="selectRecentUser" resultType="com.finns.recentUser.dto.RecentUserResponseDTO">
-        SELECT u.user_no, u.username, u.img_url
+        SELECT u.user_no, u.username, u.img_url,
+               EXISTS(SELECT 1 FROM follow_info f WHERE f.user_no = #{userNo} AND f.to_user_no = u.user_no) AS follow
         FROM
             recent_user ru
                 LEFT JOIN

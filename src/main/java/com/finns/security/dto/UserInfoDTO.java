@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 public class UserInfoDTO {
     private int user_no;
     private String username;
-    private String password;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date birth;
     private String mbti_name;
@@ -29,19 +28,16 @@ public class UserInfoDTO {
         if (member == null) {
             throw new IllegalArgumentException("MemberVO is null");
         }
-        System.out.println("MemberVO: " + member); // 로그 추가
-        System.out.println("MemberVO username: " + member.getUsername()); // 로그 추가
         return new UserInfoDTO(
                 member.getUser_no(),
                 member.getUsername(),
-                member.getPassword(),
                 member.getBirth(),
                 member.getMbti_name(),
                 member.getImg_url(),
                 member.getRenew_time(),
                 member.getAuthList().stream()
                         .map(a -> a.getAuthority())
-                        .collect(Collectors.toList()) // 변경된 부분
+                        .collect(Collectors.toList())
         );
     }
 }

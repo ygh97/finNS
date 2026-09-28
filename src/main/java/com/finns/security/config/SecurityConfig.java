@@ -26,9 +26,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
-import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -91,35 +91,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin().disable() // formLogin 비활성화 관련 필터 해제
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션 생성 모드 설정
 
+        http.cors(); // corsConfigurationSource 빈 사용
+
         http
                 .exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler);
 
-        // 경로별 접근 권한 설정
+        // 경로별 접근 권한 설정 - 로그인(/api/auth/login)은 로그인 필터가 먼저 처리한다
         http
-                .authorizeRequests() // 경로별 접근 권한 설정
+                .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS).permitAll()
-                // 일단 모든 접근 허용
-                .antMatchers(HttpMethod.POST,"/api/member").authenticated()
-                .antMatchers(HttpMethod.PUT,"/api/member", "/api/member/*/changepassword").authenticated()
-                .anyRequest().permitAll();
-//
-//                .antMatchers("/api/security/all").permitAll() // 모두 허용
-//                .antMatchers("/api/security/member").access("hasRole('ROLE_MEMBER')") // ROLE_MEMBER 이상 접근 허용
-//                .antMatchers("/api/security/admin").access("hasRole('ROLE_ADMIN')") // ROLE_ADMIN 이상 접근 허용
-//                .anyRequest().authenticated(); // 나머지는 로그인 된 경우 모두 허용
-//
-//        http.formLogin()
-//                .loginPage("/security/login") // Get 리다이렉트
-//                .loginProcessingUrl("/security/login"); // Post
-////                .defaultSuccessUrl("/");
-//
-//        http.logout() // 로그아웃 설정 시작
-//                .logoutUrl("/security/logout") // POST: 로그아웃 호출 url
-//                .invalidateHttpSession(true) // 세션 invalidate
-//                .deleteCookies("remember-me", "JSESSION-ID") // 삭제할 쿠키 목록
-//                .logoutSuccessUrl("/security/logout"); // GET: 로그아웃 이후 이동할 페이지
+                .antMatchers("/", "/index.html").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/member").permitAll() // 회원가입
+                .antMatchers(HttpMethod.GET, "/api/member/checkusername/**", "/api/member/*/avatar").permitAll()
+                .antMatchers("/swagger-ui.html", "/webjars/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
+                .anyRequest().authenticated();
     }
 
 
@@ -157,24 +144,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManager();
     }
 
-    // cross origin 접근 허용
+    // cross origin 접근 허용 - Vue 개발 서버만
     @Bean
-    public CorsFilter corsFilter() {
+    public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*");
-        config.addAllowedOrigin("http://localhost:5173"); // Vue 앱 도메인 허용
+        config.addAllowedOrigin("http://localhost:5173");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
+        return source;
     }
 
-    // 접근 제한 무시 경로 설정 – resource
+    // 접근 제한 무시 경로 설정 – 정적 리소스, 업로드 이미지
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/assets/**", "/*", "/api/member/**");
+        web.ignoring().antMatchers("/assets/**", "/resources/**", "/upload/**");
     }
 
 }

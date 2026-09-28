@@ -1,6 +1,7 @@
 package com.finns.post.mapper;
 
 import com.finns.post.dto.*;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -20,9 +21,10 @@ public interface PostMapper {
 
     long selectCountByUser(Long userNo);
 
-    void updatePublicStatus(Long no);
+    // 작성자 본인 게시글만 변경, 변경된 행 수 반환
+    int updatePublicStatus(@Param("postNo") Long no, @Param("userNo") long userNo);
 
-    void updatePost(UpdatePostDetailDTO updatePostDetailDTO);     // 공개 여부, 갱신 여부, 메모에 대해서만 update할 수 있으므로 분리?
+    int updatePost(UpdatePostDetailDTO updatePostDetailDTO);     // 공개 여부, 카테고리, 메모만 수정
 
     List<Long> selectDistinctPostNos();
 

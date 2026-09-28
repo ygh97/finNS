@@ -8,8 +8,11 @@ import com.finns.member.dto.MemberDTO;
 import com.finns.member.dto.MemberJoinDTO;
 import com.finns.member.dto.MemberUpdateDTO;
 import com.finns.member.service.MemberService;
+import com.finns.security.account.domain.CustomUser;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -51,8 +54,12 @@ public class MemberController {
     @PutMapping("/{username}")
     public ResponseEntity<MemberDTO> update(
             @PathVariable String username,
-            @ModelAttribute MemberUpdateDTO member) {
-        // 요청으로 받은 username을 MemberUpdateDTO에 설정
+            @ModelAttribute MemberUpdateDTO member,
+            @AuthenticationPrincipal CustomUser user) {
+        // 본인 정보만 수정 가능
+        if (!user.getUsername().equals(username)) {
+            throw new AccessDeniedException("본인 정보만 수정할 수 있습니다.");
+        }
         member.setUsername(username);
 
         // `service.update` 메서드를 통해 프로필 및 비밀번호 업데이트 처리

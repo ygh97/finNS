@@ -1,46 +1,26 @@
 package com.multi.security.util;
 
 import com.finns.security.util.JwtProcessor;
-import lombok.extern.log4j.Log4j;
+import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import com.finns._config.RootConfig;
-import com.finns.security.config.SecurityConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { RootConfig.class, SecurityConfig.class })
-@Log4j
+// DB·스프링 컨텍스트 없이 동작하는 단위 테스트
 class JwtProcessorTest {
-    @Autowired
-    JwtProcessor jwtProcessor;
+    private static final String SECRET = "test-secret-key-must-be-at-least-32-bytes-long!!";
+    private final JwtProcessor jwtProcessor = new JwtProcessor(SECRET);
 
     @Test
-    void generateToken() {
-        String username = "user0";
-        String token = jwtProcessor.generateToken(username);
-        log.info(token);
-        assertNotNull(token);
+    void 생성한_토큰에서_username을_꺼낸다() {
+        String token = jwtProcessor.generateToken("user0");
+        assertEquals("user0", jwtProcessor.getUsername(token));
     }
 
     @Test
-    void getUsername() {
-        String token = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyMCIsImlhdCI6MTcyMTgwMjc4NCwiZXhwIjoxNzIxODAzMDg0fQ.nwD4rIroYL6hr_-Esav8KIsHw573MbAiTT-Nz_yYHI8bMcyGZMOEjMt0Own3io_c";
-        String username = jwtProcessor.getUsername(token);
-        log.info(username);
-        assertNotNull(username);
-    }
-
-    @Test
-    void validateToken() {
-        // 5분 경과 후 테스트
-        String token = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyMCIsImlhdCI6MTcyMTgwMjc4NCwiZXhwIjoxNzIxODAzMDg0fQ.nwD4rIroYL6hr_-Esav8KIsHw573MbAiTT-Nz_yYHI8bMcyGZMOEjMt0Own3io_c";
-        boolean isValid = jwtProcessor.validateToken(token); // 5분 경과 후면 예외 발생
-        log.info(isValid);
-        assertTrue(isValid);    // 5분전이면 true,
+    void 다른_키로_서명한_토큰은_거부한다() {
+        JwtProcessor other = new JwtProcessor("another-secret-key-must-be-at-least-32-bytes!!");
+        String token = other.generateToken("user0");
+        assertThrows(JwtException.class, () -> jwtProcessor.getUsername(token));
     }
 }

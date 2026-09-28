@@ -26,10 +26,12 @@ public class PostService {
     private final AmountByCategoryMapper amountByCategoryMapper;
     private final UserMapper userMapper;
 
-    public PostResponseDTO getPost(Long no) {
+    // 비공개 게시글은 작성자 본인만 조회 가능
+    public PostResponseDTO getPost(Long no, long viewerNo) {
         // 게시글 정보 가져오기
         PostResponseDTO postResponse = Optional.ofNullable(postMapper.selectOne(no))
-                .orElseThrow(NoSuchElementException::new);
+                .filter(post -> post.isPublicStatus() || post.getUserNo() == viewerNo)
+                .orElseThrow(() -> new NoSuchElementException("게시글을 찾을 수 없습니다."));
 
         // 이미지 URL 리스트 가져오기
         List<String> imgUrls = postMapper.selectImagesByPostNo(no);
@@ -48,9 +50,12 @@ public class PostService {
                 .orElseThrow(NoSuchElementException::new);
     }
 
+    // 작성자 본인의 게시글만 수정됨
     @Transactional
     public void updatePostDetail(UpdatePostDetailDTO updatePostDetailDTO) {
-        postMapper.updatePost(updatePostDetailDTO);
+        if (postMapper.updatePost(updatePostDetailDTO) == 0) {
+            throw new NoSuchElementException("게시글이 없거나 수정 권한이 없습니다.");
+        }
     }
 
     @Transactional
@@ -77,8 +82,10 @@ public class PostService {
     }
 
     @Transactional
-    public void reversePublicStatus(Long no) {
-        postMapper.updatePublicStatus(no);
+    public void reversePublicStatus(Long no, long userNo) {
+        if (postMapper.updatePublicStatus(no, userNo) == 0) {
+            throw new NoSuchElementException("게시글이 없거나 수정 권한이 없습니다.");
+        }
     }
     // 전체 중복 제거된 post_no 가져오기
     public List<Long> getDistinctPostNos() {

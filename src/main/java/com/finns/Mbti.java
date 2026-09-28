@@ -17,8 +17,8 @@ public enum Mbti {
     TRANSPORT("교통", "뚜벅초형", 20),
     CULTURE_TRAVEL("문화 · 여행", "배낭을매고형", 100),
     EDUCATION("교육", "아인슈타인형", 50),
-    ALCOHOL_ENTERTAINMENT("술 · 유흥", "술술들어간다형", 100),
-    OTHER("기타", "기타", 1);  // 기타는 기본적으로 1로 설정 (필요 시 조정 가능)
+    ALCOHOL_ENTERTAINMENT("술 · 유흥", "술술들어간다형", 100);
+    // "기타" 카테고리는 MBTI 유형이 없으므로 점수 계산에서 제외 (calculatePoints가 0 반환)
 
     private final String categoryName;
     private final String mbtiName;
@@ -43,12 +43,9 @@ public enum Mbti {
         throw new IllegalArgumentException("Unknown category: " + categoryName);
     }
 
-    // 카테고리와 그 카테고리에서 총 사용 금액을 입력 받아 점수를 반환
+    // 카테고리와 그 카테고리에서 총 사용 금액을 입력 받아 점수를 반환, MBTI 유형이 없는 카테고리(기타 등)는 0점
     public static double calculatePoints(String categoryName, double totalAmount) {
         Mbti mbti = CATEGORY_MAP.get(categoryName);
-        if (mbti != null) {
-            return totalAmount / mbti.getAmountPerPoint();
-        }
-        throw new IllegalArgumentException("Unknown category: " + categoryName);
+        return mbti != null ? totalAmount / mbti.getAmountPerPoint() : 0;
     }
 }

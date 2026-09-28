@@ -1,25 +1,24 @@
 package com.finns.user.controller;
 
+import com.finns.security.account.domain.CustomUser;
 import com.finns.user.dto.*;
 import com.finns.user.service.UserService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@Api(value = "AmountByDateController", tags = "날짜별 총 소비 정보")
+@Api(value = "UserController", tags = "사용자 정보")
 @PropertySource({"classpath:/application.properties"})
-@CrossOrigin(origins = "http://localhost:5173") // 클라이언트의 도메인을 허용
 public class UserController {
 
     private final UserService userService;
@@ -30,9 +29,10 @@ public class UserController {
         return ResponseEntity.ok().body(user);
     }
 
-    @GetMapping("/users/search/{no}")
-    public ResponseEntity<List<SearchUserDTO>> SearchUsers(@PathVariable("no") Long userNo) {
-        List<SearchUserDTO> users = userService.getUsers(userNo);
+    // 로그인한 사용자를 제외한 전체 사용자와 팔로우 여부
+    @GetMapping("/users/search")
+    public ResponseEntity<List<SearchUserDTO>> SearchUsers(@AuthenticationPrincipal CustomUser user) {
+        List<SearchUserDTO> users = userService.getUsers((long) user.getMember().getUser_no());
         return ResponseEntity.ok().body(users);
     }
 
@@ -46,7 +46,10 @@ public class UserController {
     }
 
     @PutMapping("/users/{no}/mbti")
-    public ResponseEntity<?> analysisMbti(@PathVariable("no") Long userNo) {
+    public ResponseEntity<?> analysisMbti(@PathVariable("no") Long userNo, @AuthenticationPrincipal CustomUser user) {
+        if (userNo != user.getMember().getUser_no()) {
+            throw new AccessDeniedException("본인 MBTI만 진단할 수 있습니다.");
+        }
         userService.setMbtiByCategory(userNo);
         return ResponseEntity.ok().build();
     }
@@ -57,5 +60,4 @@ public class UserController {
         List<UserTop3DTO> top3Users = userService.getTop3ForAmountByDate(yearAndMonthDTO);
         return ResponseEntity.ok().body(top3Users);
     }
-
 }
