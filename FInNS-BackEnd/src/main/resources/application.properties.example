@@ -1,0 +1,13 @@
+# 이 파일을 같은 폴더에 application.properties 로 복사해 값을 채운다 (application.properties는 저장소에 올리지 않음)
+
+# DB
+jdbc.driver=com.mysql.cj.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/finns
+jdbc.username=finns
+jdbc.password=CHANGE_ME
+
+# JWT 서명 키 - 32바이트 이상 임의 문자열 (예: openssl rand -base64 48)
+jwt.secret=CHANGE_ME
+
+# 업로드 파일(프로필 사진) 저장 폴더 - 생략하면 사용자 홈의 finns-upload
+# upload.dir=/var/lib/finns/upload

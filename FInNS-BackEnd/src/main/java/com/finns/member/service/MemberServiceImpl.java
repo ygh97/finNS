@@ -2,6 +2,7 @@ package com.finns.member.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.finns._config.ServletConfig;
 import com.finns.member.dto.MemberDTO;
 import com.finns.member.dto.MemberJoinDTO;
 import com.finns.member.dto.MemberUpdateDTO;
@@ -9,6 +10,7 @@ import com.finns.member.exception.PasswordMissmatchException;
 import com.finns.member.mapper.MemberMapper;
 import com.finns.security.account.domain.AuthVO;
 import com.finns.security.account.domain.MemberVO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,9 @@ public class MemberServiceImpl implements MemberService {
 
     final PasswordEncoder passwordEncoder;
     final MemberMapper mapper;
+
+    @Value(ServletConfig.UPLOAD_DIR)
+    private String uploadDir;
 
     @Override
     public boolean checkDuplicate(String username) {
@@ -60,12 +65,12 @@ public class MemberServiceImpl implements MemberService {
                 throw new RuntimeException("지원하지 않는 파일 형식입니다. PNG 또는 JPG 파일만 업로드할 수 있습니다.");
             }
 
-            // 파일 저장 경로 설정
-            File uploadDir = new File("c:/upload/avatar");
+            // 파일 저장 경로 설정 - /upload/** 로 서빙되는 폴더(ServletConfig)의 avatar 하위
+            File avatarDir = new File(uploadDir, "avatar");
 
             // 디렉토리가 존재하지 않으면 생성
-            if (!uploadDir.exists()) {
-                boolean created = uploadDir.mkdirs();
+            if (!avatarDir.exists()) {
+                boolean created = avatarDir.mkdirs();
                 if (!created) {
                     log.error("아바타 파일 저장 경로를 생성할 수 없습니다.");
                     throw new RuntimeException("아바타 파일 저장 경로를 생성할 수 없습니다.");
@@ -74,7 +79,7 @@ public class MemberServiceImpl implements MemberService {
 
             // 저장할 파일 경로 설정 - 사용자 입력이 파일명에 들어가지 않도록 UUID 사용 (확장자 유지)
             String fileName = UUID.randomUUID() + extension;
-            File dest = new File(uploadDir, fileName);
+            File dest = new File(avatarDir, fileName);
             try {
                 avatar.transferTo(dest);  // 파일 저장
                 return "/upload/avatar/" + fileName;  // img_url 경로 반환

@@ -21,9 +21,11 @@
 finNS/
 ├── FInNS-BackEnd/     Spring MVC REST API (WAR)
 │   ├── db/            schema.sql(테이블 17개), seed.sql(예시 데이터)
-│   └── src/main/webapp/resources/   프론트 빌드 결과물과 정적 이미지
-└── FInNS-FrontEnd/    Vue 3 SPA
+│   └── src/main/webapp/resources/assets/   DB가 가리키는 이미지(카드·프로필·피드·은행 로고)
+└── FInNS-FrontEnd/    Vue 3 SPA (빌드 결과물 dist/ 는 저장소에 없음)
 ```
+
+배포용 WAR 하나에 백엔드와 프론트 빌드 결과물이 함께 들어갑니다. `/profile/1` 같은 화면 주소로 직접 접속하거나 새로고침해도 서버가 `index.html`을 돌려줍니다(`SpaRoutes`).
 
 ## 주요 기능
 
@@ -65,33 +67,27 @@ CREATE USER 'finns'@'localhost' IDENTIFIED BY '1234';
 GRANT SELECT, INSERT, UPDATE, DELETE ON finns.* TO 'finns'@'localhost';
 ```
 
-**2. 백엔드 설정** — `FInNS-BackEnd/src/main/resources/application.properties` (저장소에 없음, 직접 생성)
+**2. 백엔드 설정** — `FInNS-BackEnd/src/main/resources/application.properties.example`을 같은 폴더에 `application.properties`로 복사해 DB 비밀번호와 `jwt.secret`을 채웁니다. (`application.properties`는 저장소에 올라가지 않습니다)
 
-```properties
-jdbc.driver=com.mysql.cj.jdbc.Driver
-jdbc.url=jdbc:mysql://localhost:3306/finns
-jdbc.username=finns
-jdbc.password=1234
-jwt.secret=32바이트 이상 임의 문자열
-```
+**3. 개발 모드 실행** — 백엔드와 프론트를 따로 띄웁니다
 
-**3. 백엔드 실행** — WAR를 빌드해 Tomcat 9에 `ROOT.war`로 배포
-
-```bash
-cd FInNS-BackEnd
-./gradlew war
-# build/libs/backend-1.0-SNAPSHOT.war 를 <tomcat>/webapps/ROOT.war 로 복사 후
-<tomcat>/bin/catalina.bat run
-```
-
-IntelliJ Community에서는 Smart Tomcat 플러그인으로 `src/main/webapp`을 배포 디렉터리로 지정해 실행할 수 있습니다.
-
-**4. 프론트 실행**
+- 백엔드: IntelliJ Community + Smart Tomcat 플러그인 (배포 디렉터리 `FInNS-BackEnd/src/main/webapp`, 포트 8080)
+- 프론트:
 
 ```bash
 cd FInNS-FrontEnd
 npm install
-npm run dev     # http://localhost:5173 (API는 8080으로 프록시)
+npm run dev     # http://localhost:5173 (API와 이미지는 8080으로 프록시)
 ```
+
+**4. 배포용 WAR 만들기** — 프론트를 먼저 빌드해야 합니다
+
+```bash
+cd FInNS-FrontEnd && npm ci && npm run build      # dist/ 생성
+cd ../FInNS-BackEnd && ./gradlew war               # dist/ 를 WAR의 /resources 에 포함
+# build/libs/backend-1.0-SNAPSHOT.war 를 <tomcat>/webapps/ROOT.war 로 복사 후 Tomcat 실행
+```
+
+업로드한 프로필 사진은 `upload.dir`(기본값: 사용자 홈의 `finns-upload`)에 저장됩니다.
 
 예시 계정: `demo` / `1234` (seed.sql의 회원 12명 모두 비밀번호 `1234`)

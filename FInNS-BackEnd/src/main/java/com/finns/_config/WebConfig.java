@@ -1,21 +1,15 @@
 package com.finns._config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletRegistration;
 
 @Slf4j
-@Configuration
-@PropertySource({"classpath:/application.properties"})
 public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitializer {
-//    @Value("${os_type} == win ? ${file_save_location_win} : ${file_save_location_other}")
-    @Value("#{'${os_type}' == 'win' ? '${file_save_location_win}':'${file_save_location_other}'}")
-    public String LOCATION;
+    // 서블릿 컨테이너가 직접 만드는 클래스라 @Value 주입이 되지 않음 - 업로드 중간 파일은 컨테이너 임시 폴더 사용
+    final String LOCATION = "";
 
     final long MAX_FILE_SIZE = 1024 * 1024 * 10L;
     final long MAX_REQUEST_SIZE =  1024 * 1024 * 20L;

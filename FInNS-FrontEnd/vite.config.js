@@ -33,10 +33,5 @@ export default defineConfig({
   server: {
     proxy: Object.fromEntries(backendPaths.map((path) => [path, 'http://localhost:8080'])),
   },
-  build: {
-    // 백엔드가 정적 파일로 서빙하는 위치 (저장소 기준 상대 경로라 누구 PC에서든 동작)
-    outDir: fileURLToPath(new URL('../FInNS-BackEnd/src/main/webapp/resources', import.meta.url)),
-    // 비우지 않음: 백엔드 쪽에만 있는 파일(assets/card/*.png 등)이 있음
-    emptyOutDir: false,
-  },
+  // 빌드 결과물은 dist/ (저장소에 올리지 않음). 백엔드 WAR를 만들 때 WAR의 /resources 에 합쳐진다 (FInNS-BackEnd/build.gradle)
 });

@@ -106,3 +106,17 @@ test {
   useJUnitPlatform()
 }
 
+// 프론트 빌드 결과물(FInNS-FrontEnd/dist)을 WAR의 /resources 에 넣는다
+// 화면 경로는 /resources/index.html, 정적 파일은 /assets/** → /resources/assets/ 로 서빙됨 (ServletConfig)
+def frontendDist = file('../FInNS-FrontEnd/dist')
+war {
+  from(frontendDist) {
+    into 'resources'
+  }
+  doFirst {
+    if (!file("${frontendDist}/index.html").exists()) {
+      throw new GradleException('프론트 빌드 결과물이 없습니다. FInNS-FrontEnd에서 npm run build 를 먼저 실행하세요.')
+    }
+  }
+}
+

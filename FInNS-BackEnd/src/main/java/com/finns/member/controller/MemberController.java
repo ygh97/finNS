@@ -2,7 +2,6 @@ package com.finns.member.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.finns.common.util.UploadFiles;
 import com.finns.member.dto.ChangePasswordDTO;
 import com.finns.member.dto.MemberDTO;
 import com.finns.member.dto.MemberJoinDTO;
@@ -14,9 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 
 @Slf4j
 @RestController
@@ -39,16 +35,6 @@ public class MemberController {
     @PostMapping("")
     public ResponseEntity<MemberDTO> join(MemberJoinDTO member) {
         return ResponseEntity.ok(service.join(member));
-    }
-
-    @GetMapping("/{username}/avatar")
-    public void getAvatar(@PathVariable String username, HttpServletResponse response) {
-        String avatarPath = "c:/upload/avatar/" + username + ".png";
-        File file = new File(avatarPath);
-        if(!file.exists()) { // 아바타 등록이 없는 경우, 디폴트 아바타 이미지 사용
-            file = new File("C:/upload/avatar/unknown.png");
-        }
-        UploadFiles.downloadImage(response, file);
     }
 
     @PutMapping("/{username}")

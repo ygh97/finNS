@@ -1,5 +1,6 @@
 package com.finns.security.config;
 
+import com.finns._config.SpaRoutes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j;
 import org.mybatis.spring.annotation.MapperScan;
@@ -102,9 +103,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS).permitAll()
-                .antMatchers("/", "/index.html").permitAll()
+                .antMatchers(HttpMethod.GET, SpaRoutes.PATHS).permitAll() // 화면(index.html) - 데이터 API는 아래에서 인증 요구
                 .antMatchers(HttpMethod.POST, "/api/member").permitAll() // 회원가입
-                .antMatchers(HttpMethod.GET, "/api/member/checkusername/**", "/api/member/*/avatar").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/member/checkusername/**").permitAll()
                 .antMatchers("/swagger-ui.html", "/webjars/**", "/swagger-resources/**", "/v2/api-docs").permitAll()
                 .anyRequest().authenticated();
     }
