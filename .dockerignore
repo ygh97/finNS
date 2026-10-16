@@ -1,0 +1,11 @@
+.git
+.github
+**/node_modules
+**/dist
+**/build
+**/.gradle
+**/.idea
+**/.vscode
+**/*.zip
+FInNS-BackEnd/src/main/resources/application.properties
+.env

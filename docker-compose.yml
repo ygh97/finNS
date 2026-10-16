@@ -1,0 +1,62 @@
+# finNS 운영 구성: MariaDB + 앱(Tomcat) + Caddy(HTTPS 자동 발급)
+# 실행: cp .env.example .env 로 값을 채운 뒤 docker compose up -d --build
+# 자세한 순서는 docs/DEPLOY.md
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: finns
+      MARIADB_USER: finns
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      - db-data:/var/lib/mysql
+      # 처음 실행할 때(볼륨이 비었을 때)만 테이블과 예시 데이터를 만든다
+      - ./FInNS-BackEnd/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./FInNS-BackEnd/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      JDBC_URL: jdbc:mysql://db:3306/finns?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+      JDBC_USERNAME: finns
+      JDBC_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      TZ: Asia/Seoul
+      CATALINA_OPTS: -Xms256m -Xmx512m
+    volumes:
+      - uploads:/var/lib/finns/upload
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  uploads:
+  caddy-data:
+  caddy-config:

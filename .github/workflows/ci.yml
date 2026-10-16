@@ -1,0 +1,33 @@
+# 푸시·PR마다 프론트 빌드, 백엔드 테스트·WAR 빌드가 되는지 확인
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: FInNS-FrontEnd/package-lock.json
+      - name: 프론트 빌드
+        working-directory: FInNS-FrontEnd
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - name: 백엔드 테스트 + WAR 빌드
+        working-directory: FInNS-BackEnd
+        run: ./gradlew --no-daemon test war

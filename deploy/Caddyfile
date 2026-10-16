@@ -1,0 +1,5 @@
+# DOMAIN 환경변수(.env)의 주소로 HTTPS 인증서를 자동으로 받아 앱(Tomcat)으로 전달한다
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy app:8080
+}

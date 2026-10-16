@@ -1,0 +1,27 @@
+# main에 푸시하면 서버에 접속해 최신 코드로 다시 빌드·실행한다.
+# 저장소 설정(Settings → Secrets and variables → Actions)에 아래 값을 넣어야 동작한다.
+#   Variables: DEPLOY_ENABLED = true
+#   Secrets:   SSH_HOST(서버 IP), SSH_USER(ubuntu), SSH_KEY(개인키 내용)
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            cd ~/finNS
+            git pull --ff-only
+            docker compose up -d --build
+            docker image prune -f
