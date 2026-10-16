@@ -1,10 +1,11 @@
 <template>
   <button
-    class="btn btn-sm ms-10"
-    :class="isFollowing ? 'btn-light' : 'btn-primary'"
-    @click="followClick"
+    class="btn btn-sm flex-shrink-0"
+    :class="following ? 'btn-light' : 'btn-primary'"
+    :disabled="pending"
+    @click="toggle"
   >
-    <span>{{ isFollowing ? '팔로잉' : '팔로우' }}</span>
+    {{ following ? '팔로잉' : '팔로우' }}
   </button>
 </template>
 
@@ -13,37 +14,25 @@ import { ref, watch } from 'vue';
 import api from '@/api';
 
 const props = defineProps({
-  to_user_no: {
-    type: Number,
-    required: true,
-  },
-  initialIsFollowing: {
-    type: Boolean,
-    required: true,
-  },
+  userNo: { type: Number, required: true },
+  initialFollowing: { type: Boolean, default: false },
 });
 
-const isFollowing = ref(props.initialIsFollowing);
-
-// `props.initialIsFollowing`의 변화를 감지해서 `isFollowing`을 업데이트
-watch(() => props.initialIsFollowing, (newVal) => {
-  isFollowing.value = newVal;
-});
+const following = ref(props.initialFollowing);
+const pending = ref(false);
+watch(() => props.initialFollowing, (value) => (following.value = value));
 
 // 팔로우하는 사람은 서버가 토큰으로 판단
-const followClick = async () => {
+const toggle = async () => {
+  pending.value = true;
   try {
-    if (isFollowing.value) {
-      await api.delete(`/follow/${props.to_user_no}`);
-    } else {
-      await api.post(`/follow/${props.to_user_no}`);
-    }
-
-    // 팔로우 상태 변경
-    isFollowing.value = !isFollowing.value;
-
+    if (following.value) await api.delete(`/follow/${props.userNo}`);
+    else await api.post(`/follow/${props.userNo}`);
+    following.value = !following.value;
   } catch (error) {
-    console.error('팔로우/언팔로우 요청 실패:', error);
+    console.error('팔로우 변경 실패', error);
+  } finally {
+    pending.value = false;
   }
 };
 </script>

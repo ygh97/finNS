@@ -1,122 +1,100 @@
 <template>
-    <div class="m-10">
-        <div class="ms-20 mb-10">
-            <!-- 금융상품 정보 -->
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-4">
-                    <img :src="productData.imgUrl" alt="bank logo" class="bank-logo" width="50px" height="50px" />
-                    <p style="margin-left: 10px; font-size: 22px; font-weight: 800 ; margin-top: 10px; color: #717272;">
-                        {{ productData.korCoNm }}</p>
-                </div>
-                <h1 style="font-size: 30px; font-weight: bold; margin-left: 10px;">{{ productData.finPrdtNm }}</h1>
-            </div>
-        </div>
-        <div style="display: flex; padding-left: 65px;">
-            <hr style="border-top: 8px solid #C1C1C1; width: 90%;">
-        </div>
-        <div class="ms-20 mt-10 mb-10">
-            <div class="card-body ms-5" style=" line-height: 1.5; /* 글자의 높이를 1.5배로 설정 */">
-                <!-- 자세한 정보 -->
-                <div class="product-details">
-                    <div class="d-flex" style="gap: 50px;">
-                        <p><strong>최고 금리:</strong> <strong style="color: #216DBE;">{{ productData.intrRate2 }}</strong>
-                        </p>
-                        <p><strong>기본 금리:</strong> {{ productData.intrRate }}</p>
-                    </div>
-                    <p><strong>가입 대상:</strong> {{ productData.joinMember ? '제한 있음(서민전용, 일부제한)' : '제한 없음' }}</p>
-                    <p><strong>가입 방법:</strong> {{ productData.intrRate }}</p>
-                    <p><strong>가입 기간:</strong> {{ productData.saveTrm }}개월</p>
-                    <p><strong>저축 금리유형:</strong> {{ productData.intrRateTypeNm }}</p>
-                </div>
-
-                <!-- 혜택 -->
-                <div class="advantages mt-4">
-                    <p><strong>우대 조건:</strong></p>
-                    <p><strong style="color: #216DBE;">{{ productData.spclCnd }}</strong></p>
-                </div>
-                <br>
-
-                <div class="post-interest">
-                    <p><strong>만기후 이자율</strong></p>
-                    <p v-for="(mtrtdata, index) in mtrtIntArray" :key="index">- {{ mtrtdata }}</p>
-                </div>
-
-                <!-- 해당 카드 더 자세한 정보 사이트 -->
-                <div class="product-footer" style="margin-top: 70px;">
-                    <button class="btn btn-sm btn-primary me-3" @click="viewProductDetails">상품 자세히 보기</button>
-                </div>
-            </div>
-        </div>
+  <div v-if="product" class="page-body narrow">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <img v-if="product.imgUrl" :src="product.imgUrl" alt="" width="44" height="44" />
+      <span class="fs-3 fw-bolder text-gray-600">{{ product.korCoNm }}</span>
+      <span class="badge badge-light-primary fs-7">{{ product.financeProductType === '01' ? '예금' : '적금' }}</span>
     </div>
+    <h1 class="fs-2hx fw-bold mb-8">{{ product.finPrdtNm }}</h1>
+
+    <div class="rate-box mb-10">
+      <div>
+        <div class="text-gray-600 fs-6">최고 금리</div>
+        <div class="fs-2hx fw-bold text-finns">{{ product.intrRate2 }}%</div>
+      </div>
+      <div>
+        <div class="text-gray-600 fs-6">기본 금리</div>
+        <div class="fs-2x fw-bold">{{ product.intrRate }}%</div>
+      </div>
+    </div>
+
+    <dl class="detail-list">
+      <dt>가입 대상</dt>
+      <dd>{{ product.joinMember ? '제한 있음 (서민 전용, 일부 제한)' : '누구나' }}</dd>
+      <dt>가입 방법</dt>
+      <dd>{{ product.joinWay?.replaceAll(',', ', ') }}</dd>
+      <dt>가입 기간</dt>
+      <dd>{{ product.saveTrm }}개월</dd>
+      <dt>이자 계산</dt>
+      <dd>{{ product.intrRateTypeNm }}</dd>
+      <dt>우대 조건</dt>
+      <dd class="text-finns">{{ product.spclCnd }}</dd>
+      <dt>만기 후 이자율</dt>
+      <dd>
+        <div v-for="line in maturityRates" :key="line">{{ line }}</div>
+      </dd>
+    </dl>
+
+    <a v-if="product.companyUrl" :href="product.companyUrl" target="_blank" rel="noopener" class="btn btn-primary mt-10">
+      은행 홈페이지에서 자세히 보기
+    </a>
+  </div>
 </template>
 
 <script setup>
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { ref, reactive, onMounted } from 'vue';
 import api from '@/api';
 
 const route = useRoute();
-const productData = reactive({});
-const mtrtIntArray = ref([]);
+const product = ref(null);
 
-// 특정 금융 상품 조회 함수
-const getProductByNo = async (financeProductNo) => {
-    try {
-        const response = await api.get(`/product/no/${financeProductNo}`);
-        console.log(response.data);
-        Object.assign(productData, response.data);
-        if (productData.mtrtInt) {
-            if(productData.mtrtInt.includes('|')){
-                mtrtIntArray.value = productData.mtrtInt.split(' | ');
-            }else{
-                mtrtIntArray.value = [productData.mtrtInt];
-            }
-            console.log(mtrtIntArray.data);
-        }
-    } catch (error) {
-        console.error('Error fetching product data:', error);
-    }
-};
+// 'A | B' 형식
+const maturityRates = computed(() => (product.value?.mtrtInt ?? '').split('|').map((s) => s.trim()).filter(Boolean));
 
-// 컴포넌트가 마운트될 때 데이터를 가져오기
-onMounted(() => {
-    const financeProductNo = route.params.financeProductNo;
-    if (financeProductNo) {
-        getProductByNo(financeProductNo);
-    } else {
-        console.error('No financeProductNo passed to this route.');
-    }
+onMounted(async () => {
+  try {
+    const { data } = await api.get(`/product/no/${route.params.financeProductNo}`);
+    product.value = data;
+  } catch (error) {
+    console.error('상품 정보를 불러오지 못했습니다.', error);
+  }
 });
-
-// 버튼 클릭 시 호출될 함수
-const viewProductDetails = () => {
-    window.location.href = productData.companyUrl;
-};
 </script>
 
 <style scoped>
-.advantages ul {
-    list-style-type: none;
-    padding: 0;
+.rate-box {
+  display: flex;
+  gap: 48px;
+  padding: 24px 28px;
+  border-radius: 12px;
+  background-color: var(--finns-soft);
 }
 
-.advantages ul li {
-    margin-bottom: 10px;
-    font-size: 16px;
+.detail-list {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  row-gap: 18px;
+  font-size: 1.1rem;
 }
 
-.product-details p,
-.advantages p,
-.post-interest p {
-    font-size: 16px;
+.detail-list dt {
+  color: #5e6278;
 }
 
-.product-footer button {
-    padding: 10px 20px;
+.detail-list dd {
+  margin: 0;
+  font-weight: 600;
 }
 
-.product-footer {
-    display: flex;             /* Flexbox로 정렬 제어 */
-    justify-content: flex-start; /* 왼쪽 정렬 */
+@media (max-width: 575.98px) {
+  .detail-list {
+    grid-template-columns: 1fr;
+    row-gap: 4px;
   }
+
+  .detail-list dd {
+    margin-bottom: 12px;
+  }
+}
 </style>

@@ -1,191 +1,136 @@
 <template>
-  <Banner titleText="카드 월드컵" descriptionText="더 마음에 드는 카드를 골라주세요." />
+  <Banner title="카드 월드컵" description="더 마음에 드는 카드를 골라주세요." />
 
-  <!-- 라운드 및 진행 상황 표시 -->
-  <div v-if="matchcard.length === 2">
-    <h1 class="match">
-      <span v-if="roundLabel === '결승전!'">결승전</span>
-      <span v-else> {{ roundLabel }} {{ currentSelection }} / {{ totalSelectionsInRound }} </span>
-    </h1>
-  </div>
-  <!-- 카드 선택 화면 -->
-  <div class="card-container" v-if="matchcard.length === 2">
-    <div class="card" v-for="(card, index) in matchcard" :key="index">
-      <h3 class="card-title">{{ card.cardName }}</h3>
-      <img :src="card.imgUrl" class="card-image" />
-      <div class="card-description">
-        {{ card.benefit }}
+  <div class="page-body">
+    <p v-if="!loading && cards.length < 2" class="empty-message">
+      소비 내역이 있어야 추천 카드로 월드컵을 열 수 있어요.
+    </p>
+
+    <template v-else-if="match.length === 2">
+      <h2 class="text-center fs-1 fw-bold my-8">
+        {{ roundLabel }}
+        <span v-if="roundSize > 2" class="text-gray-500 fs-3 ms-2">{{ matchIndex + 1 }} / {{ roundSize / 2 }}</span>
+      </h2>
+      <div class="match">
+        <template v-for="(card, idx) in match" :key="card.cardNo">
+          <div class="soft-box candidate">
+            <h3 class="fs-3 fw-bold mb-6">{{ card.cardName }}</h3>
+            <img :src="card.imgUrl" alt="" class="card-image" />
+            <ul class="list-unstyled fs-5 mt-6">
+              <li v-for="benefit in benefitsOf(card)" :key="benefit">{{ benefit }}</li>
+            </ul>
+            <button class="btn btn-primary px-10" @click="pick(card)">선택</button>
+          </div>
+          <span v-if="idx === 0" class="versus">VS</span>
+        </template>
       </div>
-      <button class="select-button" @click="select(card.cardNo)">선택</button>
-    </div>
+    </template>
   </div>
-  <!-- 결승 이후 우승자 카드 월드컵 텍스트 -->
-  <div class="winnercard" v-if="currentRoundSize.value === 1 && matchcard.length !== 2">카드월드컵 우승!</div>
 </template>
 
 <script setup>
-import api from '@/api';
-import Banner from '@/components/common/Banner.vue';
-import { ref, onMounted, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '@/api';
+import { useAuthStore } from '@/stores/auth';
+import Banner from '@/components/common/Banner.vue';
+
+const ROUND_START = 8;
 
 const router = useRouter();
-const auth = JSON.parse(localStorage.getItem('auth'));
+const auth = useAuthStore();
 
+const loading = ref(true);
 const cards = ref([]);
-const selectcard = ref([]);
-const cardscopy = ref([]);
-const matchcard = ref([]);
-const selectcard4copy = ref([]); // 새로운 배열
+// 이번 라운드에 남은 카드, 이번 라운드에서 이긴 카드
+const remaining = ref([]);
+const winners = ref([]);
+const semifinalists = ref([]);
+const roundSize = ref(ROUND_START);
+const matchIndex = ref(0);
 
-// 현재 선택 횟수 및 라운드 상태 관리
-const currentSelection = ref(1); // 1부터 시작
-const currentRoundSize = ref(8); // 처음은 8강
-// 총 선택 횟수 계산
-const totalSelectionsInRound = computed(() => currentRoundSize.value / 2);
-// 라운드 이름 계산
-const roundLabel = computed(() => {
-  if (currentRoundSize.value === 8) return '8강';
-  if (currentRoundSize.value === 4) return '4강';
-  if (currentRoundSize.value === 2) return '결승전!';
-  return `${currentRoundSize.value}강`;
-});
-const getRecommend8Cards = async () => {
-  try {
-    const response = await api.get(`/users/${auth.user.user_no}/recommendCards/8`);
-    cards.value = response.data;
-    cards.value.forEach((card) => {
-      if (card.benefit) {
-        card.benefit = card.benefit.replace(/#/g, '  ').replace(/\|/g, '\n');
-      }
-    });
-    cardscopy.value = [...cards.value];
-    matchcard.value = cardscopy.value.splice(0, 2); // 첫 두 장의 카드 설정
-  } catch (error) {
-    console.error('Error fetching data:', error);
-  }
-};
-// 선택 함수
-const select = (cardNo) => {
-  const selectedCard = cards.value.find((card) => card.cardNo === cardNo);
-  if (selectedCard) {
-    selectcard.value.push(selectedCard); // 선택된 카드 저장
-  }
-  // 선택된 카드가 4개가 되면 selectcard4copy에 저장 && matchcard.value.length === 0
-  if (selectcard.value.length === 4) {
-    selectcard4copy.value = [...selectcard.value]; // selectcard를 복사하여 selectcard4copy에 저장
-    console.log('selectcard4copy 배열이 생성되었습니다:', selectcard4copy.value); // 콘솔 로그 출력
-  }
-  if (currentSelection.value < totalSelectionsInRound.value) {
-    // 라운드 내 선택 횟수가 남았을 경우
-    matchcard.value = cardscopy.value.splice(0, 2); // 다음 두 장의 카드 설정
-    currentSelection.value++; // 선택 횟수 증가
-  } else {
-    // 라운드가 끝나면 선택 횟수 초기화
-    currentSelection.value = 1;
-    cardscopy.value = [...selectcard.value]; // 선택된 카드로 다시 시작
-    selectcard.value = []; // 배열 초기화
-    matchcard.value = cardscopy.value.splice(0, 2); // 새로운 카드 두 장 설정
-    // 결승전 이후에는 우승카드와 4개의 카피카드를 state로 전달
-    if (matchcard.value.length !== 2) {
-      const winnerCard = { ...selectedCard }; // 우승 카드
-      const copyCards = selectcard4copy.value.map((card) => ({ ...card })); // Proxy 객체를 일반 객체로 변환
-      console.log('우승 카드와 4강 카드 배열 전달:', winnerCard, copyCards);
+const match = computed(() => remaining.value.slice(0, 2));
+const roundLabel = computed(() => (roundSize.value === 2 ? '결승전' : `${roundSize.value}강`));
 
-      router.push({
-        name: 'winnercard',
-        state: {
-          winnerCard: winnerCard, // 우승 카드
-          copyCards: copyCards, // 변환된 4강 카드 배열
-        },
-      });
-    }
-    currentRoundSize.value /= 2;
+const benefitsOf = (card) =>
+  (card.benefit ?? '')
+    .split('|')
+    .map((item) => item.replace(/#/g, ' ').trim())
+    .filter(Boolean);
+
+const pick = (card) => {
+  winners.value.push(card);
+  remaining.value = remaining.value.slice(2);
+  matchIndex.value++;
+  if (remaining.value.length) return;
+
+  // 라운드 종료 - 우승이면 결과 화면으로, 아니면 이긴 카드로 다음 라운드
+  if (winners.value.length === 1) {
+    const others = semifinalists.value.filter((c) => c.cardNo !== card.cardNo);
+    router.push({ name: 'WinnerCard', state: { winner: { ...card }, others: others.map((c) => ({ ...c })) } });
+    return;
   }
+  startRound(winners.value);
 };
+
+const startRound = (roundCards) => {
+  remaining.value = roundCards;
+  winners.value = [];
+  roundSize.value = roundCards.length;
+  matchIndex.value = 0;
+  // 우승 화면에서 2~4위로 보여줄 4강 카드
+  if (roundCards.length === 4 || !semifinalists.value.length) semifinalists.value = [...roundCards];
+};
+
 onMounted(async () => {
-  await getRecommend8Cards();
-  cardscopy.value = [...cards.value];
-  matchcard.value = cardscopy.value.splice(0, 2);
+  try {
+    const { data } = await api.get(`/users/${auth.userNo}/recommendCards/${ROUND_START}`);
+    cards.value = data;
+    // 카드가 8장보다 적으면 그 수에 맞는 가장 큰 2의 거듭제곱으로 시작
+    let size = ROUND_START;
+    while (size > data.length) size /= 2;
+    if (size >= 2) startRound(data.slice(0, size));
+  } catch (error) {
+    console.error('추천 카드를 불러오지 못했습니다.', error);
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
+
 <style scoped>
-.card {
-  background-color: #f1f7ff;
-  border-radius: 10px;
-  padding: 20px 30px 15px 30px;
-  width: 320px;
-  text-align: center;
-}
-.card-title {
-  font-weight: bold;
-  font-size: 22px;
-  margin-bottom: 30px;
-}
-.card-image {
-  width: 100%;
-  border-radius: 5px;
-  margin-bottom: 30px;
-}
-.card-description {
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: normal;
-  font-size: 18px;
-  line-height: 2;
-  white-space: pre-line; /* 줄바꿈을 실제 줄바꿈으로 표시 */
-}
-.select-button {
-  background-color: #00a3ff;
-  color: white;
-  border: none;
-  padding: 8px 10px;
-  border-radius: 7px;
-  margin: 0 auto 10px auto; /* 버튼을 중앙 정렬 */
-  font-weight: bold;
-  font-size: 16px;
-  width: 80px;
-}
-.more-info {
-  font-size: 12px;
-  color: #6c757d;
-  text-decoration: none;
-  display: block;
-  text-align: right;
-  margin-top: 20px;
-}
-.card-container {
+.match {
   display: flex;
   justify-content: center;
-  gap: 180px;
+  align-items: center;
+  gap: 40px;
 }
-.title {
-  font-size: 48px; /* 큰 타이틀 크기 */
-  font-weight: bold; /* 굵은 글꼴 */
-  text-align: center; /* 가운데 정렬 */
-  margin-top: 40px; /* 상단 여백 */
-  margin-bottom: 10px; /* 하단 여백 */
-  color: #2c3e50; /* 진한 색상 */
-}
-.sub-title {
-  font-size: 20px; /* 서브 타이틀 크기 */
-  text-align: center; /* 가운데 정렬 */
-  color: #7f8c8d; /* 연한 색상 */
-  margin-bottom: 40px; /* 하단 여백 */
-}
-.title-box {
-  background-color: #eff6f9;
-}
-.match {
-  text-align: center; /* 텍스트를 중앙 정렬 */
-  font-size: 32px; /* 텍스트 크기 설정 */
-  margin-top: 30px; /* 상단 여백 설정 */
-  margin-bottom: 50px;
-}
-.winnercard {
-  font-size: 30px;
-  color: green;
+
+.candidate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  margin-top: 20px;
+  width: 340px;
+}
+
+.card-image {
+  width: 100%;
+  max-width: 280px;
+  height: 170px;
+  object-fit: contain;
+}
+
+.versus {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--finns-primary);
+}
+
+@media (max-width: 767.98px) {
+  .match {
+    flex-direction: column;
+    gap: 16px;
+  }
 }
 </style>

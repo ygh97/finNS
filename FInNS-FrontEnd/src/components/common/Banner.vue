@@ -1,28 +1,25 @@
 <template>
-  <div class="justify-content-center align-items-center text-center" style="background-color: #f0f6f9; height: 180px">
-    <h1
-      class="text-gray-900 fw-bold pt-8 mt-9 my-1"
-      style="font-size: xx-large"
-    >
-    {{ titleText }}
-    </h1>
-    <h2 class="text-gray-700 fw-bold p-4 fs-2">
-      {{ descriptionText }}
-    </h2>
+  <div class="banner">
+    <h1 class="fw-bold text-gray-900 mb-3">{{ title }}</h1>
+    <p class="fw-bold text-gray-700 fs-3 mb-0">{{ description }}</p>
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    titleText: {
-      type: String,
-      default: 'titleText',
-    },
-    descriptionText: {
-      type: String,
-      default: 'descriptionText',
-    },
-  },
-};
+<script setup>
+defineProps({
+  title: { type: String, required: true },
+  description: { type: String, default: '' },
+});
 </script>
+
+<style scoped>
+.banner {
+  background-color: var(--finns-banner);
+  padding: 44px 16px 40px;
+  text-align: center;
+}
+
+.banner h1 {
+  font-size: 2rem;
+}
+</style>

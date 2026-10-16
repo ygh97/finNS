@@ -18,7 +18,6 @@ public final class SpaRoutes {
             "/installmentSavings/**",
             "/card/**",
             "/payDetails/**",
-            "/postDetails/**",
             "/postView/**",
             "/cardworldcup/**",
             "/auth/**",

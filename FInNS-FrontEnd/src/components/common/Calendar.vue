@@ -1,110 +1,77 @@
 <template>
-  <link rel="stylesheet" href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css">
-  
-  <div id="kt_calendar_app" class="fc fc-direction-ltr fc-theme-standard"></div>
+  <div ref="el" class="spending-calendar"></div>
 </template>
 
 <script setup>
-import { Calendar } from "@fullcalendar/core";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import { useRoute } from 'vue-router';
-import { getCurrentInstance, onMounted } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { Calendar } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import api from '@/api';
+import { formatDate, formatWon } from '@/util/format';
 
-const route = useRoute();
-const userNo = route.params.userNo;
+const props = defineProps({
+  userNo: { type: [Number, String], required: true },
+});
+// 날짜를 고르면 'YYYY-MM-DD' 를 알린다
+const emit = defineEmits(['select']);
 
-const internalInstance = getCurrentInstance(); 
-const emitter = internalInstance.appContext.config.globalProperties.emitter;
-
+const el = ref(null);
 let calendar;
 
-const addCalendarEvent = async () => {
+const loadDailyAmounts = async () => {
   try {
-    const response = await api.get(`/users/${userNo}/amountByDate`);
-
-    let events = response.data.map(item => ({
-      title: `${item.amount.toLocaleString()}원`, // amount 값을 포맷하여 title로 사용
-      start: item.transactionDate, // transaction_date를 start로 사용
-    }));
-
-    // 이벤트를 캘린더에 추가
-    events.forEach(event => calendar.addEvent(event));
-
+    const { data } = await api.get(`/users/${props.userNo}/amountByDate`);
+    data.forEach((item) => calendar.addEvent({ title: formatWon(item.amount), start: item.transactionDate }));
   } catch (error) {
-    console.error('Error geting posts:', error);
+    console.error('날짜별 소비 금액을 불러오지 못했습니다.', error);
   }
 };
 
-const initializeCalendar = () => {
-  const calendarEl = document.getElementById('kt_calendar_app');
-  
-  calendar = new Calendar(calendarEl, {
+onMounted(() => {
+  calendar = new Calendar(el.value, {
     plugins: [dayGridPlugin, interactionPlugin],
+    locale: 'ko',
     selectable: true,
-    locale: "ko",
-    headerToolbar: {
-      left: '',
-      center: 'title',
-      right: '',
-    },
+    headerToolbar: { left: 'prev', center: 'title', right: 'next' },
     showNonCurrentDates: false,
     fixedWeekCount: false,
+    height: 'auto',
     eventTextColor: '#0A6DA6',
-    height: '410px',
-    eventDidMount: function(info) {
-      info.el.style.display = 'flex';
-      info.el.style.alignItems = 'center';
-      info.el.style.justifyContent = 'center';
-      info.el.style.backgroundColor = 'transparent'; // 배경색 제거
-      info.el.style.border = 'none'; // 경계선 제거
-      info.el.style.fontSize = '16px'; // 원하는 글자 크기로 설정
-    },
-    dayCellContent: function (info) {
-      var number = document.createElement("a");
-      number.classList.add("fc-daygrid-day-number");
-      number.innerHTML = info.dayNumberText.replace("일", '').replace("日", "");
-      if (info.view.type === "dayGridMonth") {
-        return {
-          html: number.outerHTML
-        };
-      }
-      return {
-        domNodes: []
-      };
-    },
-    buttonText: {
-      today: '오늘'
-    },
-    select: (info) => {
-      emitter.emit('day_click', info.startStr);
-
-      window.scrollTo({
-        top: 950,
-        behavior: 'smooth' // 부드러운 스크롤 효과
-      });
-    },
-    eventClick: (info) => {         
-      calendar.select(info.event.startStr);
-    },
-    events: [
-    ],
+    eventBackgroundColor: 'transparent',
+    eventBorderColor: 'transparent',
+    // '1일' → '1'
+    dayCellContent: (info) => info.dayNumberText.replace('일', ''),
+    select: (info) => emit('select', info.startStr),
+    eventClick: (info) => calendar.select(info.event.startStr),
   });
-
-  addCalendarEvent();
   calendar.render();
-  // 캘린더가 펼쳐지면 디폴트로 오늘 날짜를 emit
-  emitter.emit('day_click', new Date().toISOString().slice(0, 10));
-
-};
-
-onMounted(() => {
-  initializeCalendar();
+  loadDailyAmounts();
+  emit('select', formatDate(new Date()));
 });
 
+onBeforeUnmount(() => calendar?.destroy());
 </script>
 
 <style scoped>
+.spending-calendar :deep(.fc-event-title) {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+}
 
+.spending-calendar :deep(.fc-toolbar-title) {
+  font-size: 1.5rem;
+}
+
+.spending-calendar :deep(.fc-daygrid-day-frame) {
+  min-height: 64px;
+  cursor: pointer;
+}
+
+@media (max-width: 575.98px) {
+  .spending-calendar :deep(.fc-event-title) {
+    font-size: 0.7rem;
+  }
+}
 </style>

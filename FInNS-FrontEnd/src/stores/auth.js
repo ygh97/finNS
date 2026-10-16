@@ -1,102 +1,57 @@
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import moment from 'moment'; // moment.js import
 
-const initState = {
-  token: '', // 접근 토큰(JWT)
-  user: {
-    userNo: '', // 사용자 no
-    userName: '', // 사용자 ID
-    mbtiName: '', // 추가된 필드
-    birth: '', // DB에서 받아올 값
-    renew_time: '', // 변경된 필드
-    isSignedUp: false, // 회원가입 여부 플래그 추가
-  },
+const STORAGE_KEY = 'auth';
+
+// 배포 사이트에서 회원가입 없이 둘러볼 수 있는 체험 계정 (db/seed.sql)
+export const DEMO_ACCOUNT = { username: 'demo', password: '1234' };
+
+const loadSaved = () => {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
+  } catch {
+    return {};
+  }
 };
 
 export const useAuthStore = defineStore('auth', () => {
-  const state = ref({ ...initState });
+  const saved = loadSaved();
+  const token = ref(saved.token ?? '');
+  // 서버 로그인 응답의 user: { user_no, username, birth, mbti_name, img_url, renew_time }
+  const user = ref(saved.user ?? null);
 
-  const isLogin = computed(() => {
-    // console.log('isLogin 계산:', !!state.value.token);
-    return !!state.value.token;
-  });
-  const isSignedUp = computed(() => state.value.user.isSignedUp); // 회원가입 여부
+  const isLogin = computed(() => !!token.value);
+  const userNo = computed(() => user.value?.user_no);
+  const username = computed(() => user.value?.username);
+  const isDemo = computed(() => username.value === DEMO_ACCOUNT.username);
 
-  const userNo = computed(() => state.value.user.userNo);
-  const userName = computed(() => state.value.user.userName); // 로그인 사용자 ID
-  const email = computed(() => state.value.user.email); // 로그인 사용자 email
-  const mbtiName = computed(() => state.value.user.mbtiName); // mbti
-  const birth = computed(() => state.value.user.birth); // 생년월일
-  const renew_time = computed(() => state.value.user.renew_time); // 시, 분, 초 포함한 시간
+  const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: token.value, user: user.value }));
 
+  // 로그인 API는 인증 헤더가 필요 없어서 기본 axios를 쓴다
   const login = async (member) => {
     try {
       const { data } = await axios.post('/api/auth/login', member);
-
-      // state 업데이트
-      state.value = {
-        token: data.token,
-        user: {
-          ...data.user,
-          user_no: data.user.user_no,
-          birth: moment(data.user.birth).format('YYYY-MM-DD'),
-          renew_time: moment(data.user.renew_time).format(
-            'YYYY-MM-DD HH:mm:ss'
-          ),
-        },
-      };
-
-      localStorage.setItem('auth', JSON.stringify(state.value));
-      // console.log('로그인 후 state:', state.value);
-      // console.log('로그인 직후 isLogin:', isLogin.value);
+      token.value = data.token;
+      user.value = data.user;
+      save();
       return true;
-    } catch (error) {
-      console.error(
-        '로그인 실패:',
-        error.response ? error.response.data : error
-      );
+    } catch {
       return false;
     }
   };
 
   const logout = () => {
-    localStorage.clear();
-    state.value = { ...initState };
+    localStorage.removeItem(STORAGE_KEY);
+    token.value = '';
+    user.value = null;
   };
 
-  const getToken = () => state.value.token;
-
-  const load = () => {
-    const auth = localStorage.getItem('auth');
-    if (auth != null) {
-      state.value = JSON.parse(auth);
-      // console.log('스토어 로드된 state:', state.value); // 확인 로그
-    }
-  };
-
-  // 서버가 돌려준 회원 정보 중 수정 가능한 값만 반영
+  // 프로필 수정 후 서버가 돌려준 회원 정보 반영
   const changeProfile = (member) => {
-    if (member.img_url) state.value.user.img_url = member.img_url;
-    localStorage.setItem('auth', JSON.stringify(state.value));
+    if (member.img_url) user.value = { ...user.value, img_url: member.img_url };
+    save();
   };
 
-  load();
-
-  return {
-    state,
-    userName,
-    userNo,
-    email,
-    birth,
-    mbtiName,
-    isLogin,
-    isSignedUp, // 추가된 회원가입 여부
-    renew_time, // 업데이트된 필드
-    changeProfile,
-    login,
-    logout,
-    getToken,
-  };
+  return { token, user, isLogin, userNo, username, isDemo, login, logout, changeProfile };
 });

@@ -1,288 +1,126 @@
 <template>
-    <!-- <div class="justify-content-center align-items-center text-center bg-title">
-        <h1 class="text-gray-900 fw-bold pt-8 mt-9 my-1" style="font-size: xx-large;">카드 상품</h1>
-        <h2 class="text-gray-700 fw-bold p-4 fs-2">
-        자신에게 맞는 조건을 선택하여 맞춤 카드 상품을 확인해보세요.
-        </h2>
-    </div> -->
-    <Banner titleText="카드 상품" descriptionText="자신에게 맞는 조건을 선택하여 맞춤 카드 상품을 확인해보세요." />
-    <!-- 탭 -->
-    <div class="m-5">
-        <ul class="nav nav-tabs nav-line-tabs mb-5 fs-6">
-            <li class="nav-item">
-                <router-link class="nav-link text-active-primary ms-0 me-10 py-5" to="/Deposit"
-                    exact-active-class="active" style="font-size: 20px;">
-                    예금
-                </router-link>
-            </li>
-            <li class="nav-item">
-                <router-link class="nav-link text-active-primary ms-0 me-10 py-5" to="/InstallmentSavings"
-                    exact-active-class="active" style="font-size: 20px; ">
-                    적금
-                </router-link>
-            </li>
-            <li class="nav-item">
-                <router-link class="nav-link text-active-primary ms-0 me-10 py-5" to="/Card" exact-active-class="active"
-                    style="font-size: 20px; font-weight: bold; color: #216DBE;">
-                    카드
-                </router-link>
-            </li>
-        </ul>
+  <Banner title="카드 상품" description="혜택 분야를 골라 나에게 맞는 카드 상품을 확인해보세요." />
+
+  <div class="page-body">
+    <FinanceTabs />
+
+    <section class="card card-body shadow-sm mb-8">
+      <label class="form-label fw-bold" for="keyword">검색</label>
+      <div class="position-relative search-box">
+        <i class="ki-duotone ki-magnifier fs-3 text-gray-500 position-absolute top-50 translate-middle-y ms-4">
+          <span class="path1"></span><span class="path2"></span>
+        </i>
+        <input id="keyword" v-model.trim="keyword" type="text" class="form-control form-control-solid ps-12"
+          placeholder="카드사, 카드명을 입력해주세요." />
+      </div>
+    </section>
+
+    <div class="d-flex flex-wrap gap-2 mb-6">
+      <button v-for="tab in TABS" :key="tab" type="button" class="btn btn-sm fw-bold"
+        :class="selectedTab === tab ? 'btn-primary' : 'btn-light'" @click="selectedTab = tab">
+        {{ tab }}
+      </button>
     </div>
 
-    <div class="tab-content" id="myTabContent" style="margin-top: -30px;">
-        <!-- 카드 탭 내용 -->
-        <div class="m-5 mb-1">
-            <!-- 검색어 필터링 -->
-            <div class="card mb-10">
-                <div class="d-flex align-items-center">
-                    <div class="card-body">
-                        <label class="fs-6 form-label fw-bold text-gray-900 me-3">검색</label>
-                        <div class="d-flex align-items-center">
-                            <div class="position-relative w-md-600px me-2">
-                                <i
-                                    class="ki-duotone ki-magnifier fs-3 text-gray-500 position-absolute top-50 translate-middle ms-6">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                </i>
-                                <input v-model="searchCard" @keyup.enter="searchEnter" type="text"
-                                    class="form-control form-control-solid ps-10" placeholder="은행명, 카드명을 입력해주세요.">
-                            </div>
-                            <div>
-                                <button class="btn btn-primary px-4" @click="searchEnter">검색</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <h3 class="fw-bold mb-4">{{ filtered.length }} <span class="text-gray-500 fs-6">개 카드</span></h3>
 
-            <!-- 카드 카테고리 탭 -->
-            <div class="m-5">
-                <ul class="nav nav-tabs nav-line-tabs mb-5 fs-6">
-                    <li v-for="(item, index) in tabList" :key="index" class="nav-item">
-                        <a href="#" :class="['nav-link', { 'active': selectedTab === item }]"
-                            @click.prevent="selectTab(item)">
-                            <h3 class="tab-title">{{ item }}</h3>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- 카드 상품 리스트 -->
-            <div class="mt-5">
-                <div class="d-flex flex-wrap flex-stack">
-                    <!--begin::Title-->
-                    <div class="d-flex flex-wrap align-items-center my-1">
-                        <h3 class="fw-bold me-5 my-1 ms-5">{{ filteredCards.length }}
-                            <span class="text-gray-500 fs-6">카드 상품 개수</span>
-                        </h3>
-                    </div>
-                    <!--end::Title-->
-                </div>
-                <!-- 데이터 테이블 -->
-                <table id="kt_datatable_column_rendering" class="table table-striped table-row-bordered gy-5 gs-7">
-                    <tr v-for="(item, index) in paginatedCards" :key="index">
-                        <td>
-                            <div class="card card-flush shadow-sm m-5">
-                                <div class="card-side d-flex justify-content-between m-7 align-items-center">
-                                    <div class="text-center ms-5" style="width: 200px;">
-                                        <img :src="item.imgUrl" ref="image" @load="onImageLoad" style="width: 180px;">
-                                    </div>
-                                    <div class="flex-grow-1 ms-10 ">
-                                        <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
-                                            <div class="d-flex flex-column">
-                                                <div class="d-flex align-items-center mb-1">
-                                                    <a href="#"
-                                                        class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">{{
-                                                            item.corpName }} {{ item.cardName }}</a>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex mb-4">
-                                                <a @click="gotoCardDetail(item)" href="#"
-                                                    class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
-                                                    data-bs-target="#kt_modal_new_target">자세히
-                                                    보기</a>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex flex-wrap justify-content-start">
-                                            <!--begin::Stats-->
-                                            <div class="d-flex flex-wrap">
-                                                <div v-for="(benefit, index) in parseBenefits(item.benefit)"
-                                                    :key="index"
-                                                    class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="fs-4 fw-bold">{{ benefit[0] }}</div>
-                                                    </div>
-                                                    <div class="fw-semibold fs-6 text-gray-500">{{ benefit[1] }}</div>
-                                                </div>
-                                            </div>
-                                            <!--end::Stats-->
-                                        </div>
-                                        <!--end::Info-->
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-
-                <!-- 페이지네이션 -->
-                <div id="" class="row">
-                    <!-- 페이지 개수 -->
-                    <div id=""
-                        class="col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start">
-                        <div class="dataTables_length" id="">
-                            <label>
-                                <select v-model="itemsPerPage" @change="currentPage = 1"
-                                    class="form-select form-select-sm form-select-solid">
-                                    <option value="5">5</option>
-                                    <option value="10">10</option>
-                                    <option value="20">20</option>
-                                    <option value="50">50</option>
-                                </select>
-                            </label>
-                        </div>
-                    </div>
-                    <!-- 페이징 -->
-                    <div
-                        class="col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end">
-                        <div class="dataTables_paginate paging_simple_numbers">
-                            <ul class="pagination">
-                                <li class="paginate_button page-item" :class="{ 'disabled': currentPage === 1 }">
-                                    <a href="#" @click.prevent="changePage(currentPage - 1)" class="page-link">이전</a>
-                                </li>
-
-                                <li v-for="page in visiblePages" :key="page" class="paginate_button page-item"
-                                    :class="{ 'active': currentPage === page }">
-                                    <a href="#" @click.prevent="changePage(page)" class="page-link">{{ page }}</a>
-                                </li>
-
-                                <li class="paginate_button page-item"
-                                    :class="{ 'disabled': currentPage === totalPages }">
-                                    <a href="#" @click.prevent="changePage(currentPage + 1)" class="page-link">다음</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <RouterLink v-for="card in paged" :key="card.cardNo" :to="`/card/${card.cardNo}`" class="card card-flush shadow-sm card-row mb-5">
+      <img :src="card.imgUrl" alt="" class="card-image" />
+      <div class="flex-grow-1">
+        <div class="text-gray-500 fw-semibold">{{ card.corpName }}</div>
+        <div class="fs-2 fw-bold text-gray-900 mb-4">{{ card.cardName }}</div>
+        <div class="d-flex flex-wrap gap-3">
+          <div v-for="[title, detail] in benefitsOf(card)" :key="title" class="benefit">
+            <div class="fs-5 fw-bold text-gray-800">{{ title }}</div>
+            <div class="fs-7 fw-semibold text-gray-500">{{ detail }}</div>
+          </div>
         </div>
-    </div>
+      </div>
+    </RouterLink>
+    <p v-if="loaded && !filtered.length" class="empty-message">조건에 맞는 카드가 없습니다.</p>
 
+    <Pagination v-model:page="page" v-model:page-size="pageSize" :total="filtered.length" :page-sizes="[5, 10, 20]" />
+  </div>
 </template>
 
 <script setup>
+import { computed, onMounted, ref, watch } from 'vue';
 import api from '@/api';
 import Banner from '@/components/common/Banner.vue';
-import { useRouter } from 'vue-router';
-import { ref, computed, onMounted } from 'vue';
+import FinanceTabs from '@/components/common/FinanceTabs.vue';
+import Pagination from '@/components/common/Pagination.vue';
 
-const router = useRouter();
+// 카드 혜택 분야 - DB card_type.type 과 같아야 한다 (CardService.matchingCategory)
+const TABS = ['전체', '식비', '여가', '교통', '의료', '통신', '교육'];
 
-// 탭 리스트 및 카드 데이터
-const tabList = ['전체', '식비', '여가', '교통', '의료', '통신', '교육'];
+const cards = ref([]);
+const loaded = ref(false);
+const keyword = ref('');
+const selectedTab = ref('전체');
+const page = ref(1);
+const pageSize = ref(5);
 
-const image = ref(null);
-const cards = ref([]); // 카드 데이터를 담을 ref
+const filtered = computed(() =>
+  cards.value.filter(
+    (card) =>
+      (card.cardName.includes(keyword.value) || card.corpName.includes(keyword.value)) &&
+      (selectedTab.value === '전체' || card.cardCategories.split(',').map((c) => c.trim()).includes(selectedTab.value))
+  )
+);
 
-// 컴포넌트가 마운트될 때 데이터를 가져오기
-const getCards = async () => {
-    try {
-        const response = await api.get('/product/card');
-        cards.value = response.data;
-        console.log(cards);
-    } catch (error) {
-        alert('Error fetching data:', error);
-    }
+const paged = computed(() => filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
+watch([keyword, selectedTab], () => (page.value = 1));
 
-}
-
-// 요약 혜택 ' | ' 기준으로, '#'기준으로 split 
-const parseBenefits = (benefit) => {
-    if (!benefit) 
-        return [];
-    return benefit.split(' | ').map(item => item.split('#'));
-};
+// 요약 혜택: '제목#설명 | 제목#설명'
+const benefitsOf = (card) => (card.benefit ? card.benefit.split(' | ').map((item) => item.split('#')) : []);
 
 onMounted(async () => {
-    getCards();
+  try {
+    const { data } = await api.get('/product/card');
+    cards.value = data;
+  } catch (error) {
+    console.error('카드 목록을 불러오지 못했습니다.', error);
+  } finally {
+    loaded.value = true;
+  }
 });
-
-// 선택된 탭과 검색어 관리
-const selectedTab = ref('전체');
-const searchCard = ref('');
-
-// 페이지네이션 상태
-const itemsPerPage = ref(5);
-const currentPage = ref(1);
-
-// 필터링된 카드 리스트 계산
-const filteredCards = computed(() => {
-    return cards.value.filter(item => {
-        const matchesSearch = item.cardName.includes(searchCard.value) || item.corpName.includes(searchCard.value);
-        const matchesCategory = selectedTab.value === '전체' || item.cardCategories.split(',').map(c => c.trim()).includes(selectedTab.value);
-        return matchesSearch && matchesCategory;
-    });
-});
-
-// 페이지네이션을 적용한 카드 리스트 계산
-const paginatedCards = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage.value;
-    return filteredCards.value.slice(start, start + itemsPerPage.value);
-});
-
-// 총 페이지 수 계산
-const totalPages = computed(() => {
-    return Math.ceil(filteredCards.value.length / itemsPerPage.value);
-});
-
-// 페이지 변경 메서드
-const changePage = (page) => {
-    if (page < 1 || page > totalPages.value) return;
-    currentPage.value = page;
-};
-
-// 탭 선택 시 호출되는 함수
-const selectTab = (tab) => {
-    selectedTab.value = tab;
-    currentPage.value = 1;
-};
-
-// 현재 페이지 기준으로 이전 2페이지, 이후 2페이지를 계산하는 computed 속성
-const visiblePages = computed(() => {
-    let pages = [];
-    let startPage = Math.max(currentPage.value - 2, 1);
-    let endPage = Math.min(currentPage.value + 2, totalPages.value);
-
-    for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-    }
-
-    return pages;
-});
-
-// 상세 페이지로 이동
-const gotoCardDetail = (item) => {
-    router.push({
-        path: `/Card/${item.cardNo}`,
-        query: {
-            item: JSON.stringify(item),
-        },
-    });
-};
 </script>
 
 <style scoped>
-.nav-tabs .nav-link.active {
-    color: #216DBE;
-    font-weight: bold;
-    border-bottom: 2px solid #216DBE;
+.search-box {
+  max-width: 600px;
 }
 
-.bg-title {
-    background-color: #f0f6f9;
-    /* Powder Blue 색상 */
-    height: 180px;
+.card-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 32px;
+  padding: 24px 32px;
+  transition: box-shadow 0.15s ease;
+}
 
+.card-row:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-image {
+  width: 180px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.benefit {
+  min-width: 140px;
+  padding: 10px 14px;
+  border: 1px dashed #e1e3ea;
+  border-radius: 8px;
+}
+
+@media (max-width: 767.98px) {
+  .card-row {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
 }
 </style>
