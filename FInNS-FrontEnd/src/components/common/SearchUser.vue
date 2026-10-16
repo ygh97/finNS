@@ -1,11 +1,13 @@
 <template>
   <div ref="root" class="search-user">
     <div class="position-relative">
+      <!-- v-model은 한글 입력(IME) 조합이 끝나야 값이 바뀌어서 input 이벤트로 직접 받는다 -->
       <input
-        v-model.trim="query"
+        :value="query"
         type="text"
         class="form-control form-control-solid pe-12"
         placeholder="유저 이름을 검색하세요"
+        @input="query = $event.target.value.trim()"
         @focus="open"
         @keydown.esc="isOpen = false"
       />
