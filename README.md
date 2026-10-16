@@ -127,5 +127,5 @@ Oracle Cloud 무료 VM에 Docker Compose로 배포합니다. 순서는 [docs/DEP
 
 ```bash
 cp .env.example .env    # 도메인, DB 비밀번호, JWT 키 입력
-docker compose up -d --build
+docker compose pull && docker compose up -d
 ```

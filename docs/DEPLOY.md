@@ -25,7 +25,7 @@ Oracle Cloud 무료(Always Free) VM 한 대에 Docker Compose로 DB·앱·Caddy(
 | Networking | 새 VCN, **Assign a public IPv4 address** 체크 |
 | SSH keys | **Save private key**로 개인키를 내려받아 둡니다 |
 
-- A1 자리가 없다는 오류(Out of capacity)가 나면 몇 시간 뒤 다시 시도하거나, **AMD → VM.Standard.E2.1.Micro**(메모리 1GB)를 고릅니다. 1GB에서도 동작하지만 첫 빌드가 오래 걸립니다(5단계 스크립트가 스왑을 추가합니다).
+- A1 자리가 없다는 오류(용량 부족)가 나면 **AMD → VM.Standard.E2.1.Micro**(메모리 1GB, Always Free)를 고릅니다. 이 경우 서버에서 빌드하지 않고 GitHub Actions가 만든 이미지를 받아 씁니다(6단계). 5단계 스크립트가 스왑 2GB를 추가합니다.
 
 **포트 열기**: 인스턴스 화면 → **Subnet → Default Security List → Add Ingress Rules**
 
@@ -57,9 +57,17 @@ sudo sh deploy/setup-server.sh   # Docker 설치, 80/443 방화벽 열기, (메�
 exit                              # 다시 접속해야 docker 권한이 적용됨
 ```
 
-## 6. 실행
+## 6. 배포 이미지 준비 (GitHub)
 
-다시 접속해서:
+메모리 1GB 서버에서는 직접 빌드하기 어려워서, GitHub Actions가 이미지를 만들어 `ghcr.io/ygh97/finns`에 올립니다(`.github/workflows/deploy.yml`).
+
+1. 코드를 main에 올리면 GitHub 저장소의 **Actions** 탭에서 `Deploy` 작업이 돕니다(10분 안팎). 초록색 체크가 뜰 때까지 기다립니다.
+2. GitHub 내 프로필 → **Packages** → `finns` → **Package settings** → 맨 아래 **Change visibility** → **Public**.
+   서버가 로그인 없이 이미지를 받을 수 있게 하기 위함입니다. 소스 코드 저장소 공개 여부와는 별개입니다.
+
+## 7. 실행
+
+서버에 다시 접속해서:
 
 ```bash
 cd finNS
@@ -77,9 +85,12 @@ JWT_SECRET=...
 ```
 
 ```bash
-docker compose up -d --build     # 첫 빌드 5~10분
-docker compose logs -f app       # "Server startup" 이 보이면 Ctrl+C
+docker compose pull              # 이미지 받기
+docker compose up -d
+docker compose logs -f app       # "Server startup" 이 보이면 Ctrl+C (처음엔 1~2분)
 ```
+
+메모리 4GB 이상 서버(A1 등)라면 `docker compose up -d --build`로 서버에서 직접 빌드해도 됩니다.
 
 브라우저에서 `https://finns.duckdns.org` 에 접속해 **체험 계정으로 둘러보기**를 눌러 봅니다.
 HTTPS 인증서는 Caddy가 첫 접속 때 자동으로 받습니다(1분 정도 걸릴 수 있음).
@@ -88,7 +99,7 @@ HTTPS 인증서는 Caddy가 첫 접속 때 자동으로 받습니다(1분 정도
 
 | 할 일 | 명령 |
 | --- | --- |
-| 최신 코드 반영 | `git pull && docker compose up -d --build` |
+| 최신 코드 반영 | main에 푸시 → Actions 완료 후 `git pull && docker compose pull && docker compose up -d` |
 | 로그 보기 | `docker compose logs -f app` |
 | 예시 데이터 초기화 | `sh deploy/reset-db.sh` (가입 회원·작성 글 삭제) |
 | 중지 / 시작 | `docker compose stop` / `docker compose start` |
@@ -103,7 +114,7 @@ crontab -e
 
 ## GitHub Actions 자동 배포 (선택)
 
-main에 푸시하면 서버에서 `git pull && docker compose up -d --build`를 실행하도록 `.github/workflows/deploy.yml`이 준비돼 있습니다.
+`Deploy` 작업은 이미지를 올린 뒤 서버에 접속해 `git pull && docker compose pull && docker compose up -d`까지 실행할 수 있습니다.
 GitHub 저장소 **Settings → Secrets and variables → Actions**에 아래를 넣으면 켜집니다.
 
 | 종류 | 이름 | 값 |

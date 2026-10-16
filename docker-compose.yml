@@ -1,12 +1,16 @@
 # finNS 운영 구성: MariaDB + 앱(Tomcat) + Caddy(HTTPS 자동 발급)
-# 실행: cp .env.example .env 로 값을 채운 뒤 docker compose up -d --build
-# 자세한 순서는 docs/DEPLOY.md
+# 실행: cp .env.example .env 로 값을 채운 뒤
+#   docker compose pull && docker compose up -d   (GitHub Actions가 만든 이미지 사용)
+#   docker compose up -d --build                  (서버에서 직접 빌드 - 메모리 4GB 이상)
+# 메모리 1GB 서버(Oracle E2.1.Micro)에 맞춰 DB·Tomcat 메모리를 줄여 두었다. 자세한 순서는 docs/DEPLOY.md
 
 services:
   db:
     image: mariadb:11.4
     restart: unless-stopped
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: >-
+      --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=64M --performance-schema=OFF
     environment:
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MARIADB_DATABASE: finns
@@ -25,6 +29,7 @@ services:
       retries: 10
 
   app:
+    image: ${APP_IMAGE:-ghcr.io/ygh97/finns:latest}
     build: .
     restart: unless-stopped
     depends_on:
@@ -36,7 +41,7 @@ services:
       JDBC_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       TZ: Asia/Seoul
-      CATALINA_OPTS: -Xms256m -Xmx512m
+      CATALINA_OPTS: -Xms128m -Xmx384m -XX:MaxMetaspaceSize=160m
     volumes:
       - uploads:/var/lib/finns/upload
 
