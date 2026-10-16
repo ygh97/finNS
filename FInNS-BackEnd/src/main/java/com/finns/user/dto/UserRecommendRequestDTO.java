@@ -12,4 +12,3 @@ public class UserRecommendRequestDTO {
     private String mbtiName;
 }
 
-

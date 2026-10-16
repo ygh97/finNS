@@ -1,7 +1,6 @@
 package com.finns.finance.mapper;
 
 import com.finns.finance.dto.CardDTO;
-import com.finns.finance.dto.Finance;
 import com.finns.finance.dto.FinanceCount;
 import com.finns.finance.dto.FinanceDTO;
 

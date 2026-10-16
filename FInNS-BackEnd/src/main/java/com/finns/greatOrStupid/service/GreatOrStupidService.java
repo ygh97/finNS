@@ -1,26 +1,20 @@
 package com.finns.greatOrStupid.service;
 
-import com.finns.greatOrStupid.dto.GreatOrStupid;
 import com.finns.greatOrStupid.dto.UpdateGreatOrStupidRequestDTO;
-import com.finns.greatOrStupid.dto.UpdateGreatOrStupidResponseDTO;
 import com.finns.greatOrStupid.mapper.GreatOrStupidMapper;
 import com.finns.post.dto.GreatAndStupidCount;
 import com.finns.post.mapper.PostMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@PropertySource({"classpath:/application.properties"})
 @Transactional(readOnly = true)
 public class GreatOrStupidService {
 

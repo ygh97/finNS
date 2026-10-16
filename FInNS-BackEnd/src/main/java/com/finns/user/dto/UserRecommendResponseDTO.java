@@ -14,4 +14,3 @@ public class UserRecommendResponseDTO {
     private boolean follow;
 }
 
-

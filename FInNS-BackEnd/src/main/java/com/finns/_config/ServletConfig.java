@@ -3,6 +3,10 @@ package com.finns._config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -12,11 +16,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Paths;
 
+/**
+ * DispatcherServlet 컨텍스트 - 컨트롤러, 정적 파일, SPA 화면 경로, Swagger UI.
+ */
 @EnableWebMvc
-@ComponentScan(basePackages = {"com.finns.**"})
-public class ServletConfig  implements WebMvcConfigurer {
+@ComponentScan(basePackages = "com.finns", useDefaultFilters = false, includeFilters =
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = {Controller.class, ControllerAdvice.class}))
+@Import(SwaggerConfig.class)
+public class ServletConfig implements WebMvcConfigurer {
 
-    // 업로드 파일 저장 폴더 - application.properties의 upload.dir, 없으면 사용자 홈 아래
+    // 업로드 파일 저장 폴더 - upload.dir 설정(UPLOAD_DIR 환경변수), 없으면 사용자 홈 아래
     public static final String UPLOAD_DIR = "${upload.dir:${user.home}/finns-upload}";
 
     @Value(UPLOAD_DIR)
@@ -36,18 +45,20 @@ public class ServletConfig  implements WebMvcConfigurer {
                 .addResourceLocations("/resources/");
         registry.addResourceHandler("/assets/**")
                 .addResourceLocations("/resources/assets/");
-        // 업로드된 아바타 이미지 (MemberServiceImpl.saveAvatar 저장 위치)
+        // 업로드된 프로필 사진 (MemberServiceImpl.saveAvatar 저장 위치)
         String uploadLocation = Paths.get(uploadDir).toUri().toString();
         registry.addResourceHandler("/upload/**")
                 .addResourceLocations(uploadLocation.endsWith("/") ? uploadLocation : uploadLocation + "/");
+        // Swagger UI
+        registry.addResourceHandler("/swagger-ui.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
-
-    //	Servlet 3.0 파일 업로드 사용시
+    // Servlet 3.0 파일 업로드 (크기 제한은 WebConfig)
     @Bean
     public MultipartResolver multipartResolver() {
-        StandardServletMultipartResolver resolver = new StandardServletMultipartResolver();
-        return resolver;
+        return new StandardServletMultipartResolver();
     }
-
 }

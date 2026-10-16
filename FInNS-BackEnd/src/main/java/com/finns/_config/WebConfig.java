@@ -1,21 +1,14 @@
 package com.finns._config;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletRegistration;
 
-@Slf4j
 public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitializer {
-    // 서블릿 컨테이너가 직접 만드는 클래스라 @Value 주입이 되지 않음 - 업로드 중간 파일은 컨테이너 임시 폴더 사용
-    final String LOCATION = "";
-
-    final long MAX_FILE_SIZE = 1024 * 1024 * 10L;
-    final long MAX_REQUEST_SIZE =  1024 * 1024 * 20L;
-    final int FILE_SIZE_THRESHOLD = 1024 * 1024 * 5;;
-
-//    @Value("${upload.maxFileSize}") Long maxFileSize;
+    private static final long MAX_FILE_SIZE = 1024 * 1024 * 10L;
+    private static final long MAX_REQUEST_SIZE = 1024 * 1024 * 20L;
+    private static final int FILE_SIZE_THRESHOLD = 1024 * 1024 * 5;
 
     @Override
     protected Class<?>[] getRootConfigClasses() {
@@ -32,31 +25,11 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
         return new String[] { "/" };
     }
 
-    // POST body 문자 인코딩 필터 설정 - UTF-8 설정
-//    protected Filter[] getServletFilters() {
-//        CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter();
-//
-//        characterEncodingFilter.setEncoding("UTF-8");
-//        characterEncodingFilter.setForceEncoding(true);
-//
-//        return new Filter[] {characterEncodingFilter};
-//    }
-
-
     @Override
     protected void customizeRegistration(ServletRegistration.Dynamic registration) {
-//        log.info("Max File Size: " + maxFileSize);
-
         registration.setInitParameter("throwExceptionIfNoHandlerFound", "true");
-        MultipartConfigElement multipartConfig =
-                new MultipartConfigElement(
-                        LOCATION,   // 업로드 처리 디렉토리 경로
-                        MAX_FILE_SIZE,	// 업로드 가능한 파일 하나의 최대 크기
-                        MAX_REQUEST_SIZE,	// 업로드 가능한 전체 최대 크기(여러 파일 업로드 하는 경우)
-                        FILE_SIZE_THRESHOLD		// 메모리 파일의 최대 크기(이보다 작으면 실제 메모리에서만 작업)
-                );
-        registration.setMultipartConfig(multipartConfig);
+        // 업로드 중간 파일은 컨테이너 임시 폴더("")를 쓴다
+        registration.setMultipartConfig(
+                new MultipartConfigElement("", MAX_FILE_SIZE, MAX_REQUEST_SIZE, FILE_SIZE_THRESHOLD));
     }
-
-
 }

@@ -1,14 +1,12 @@
 package com.finns.finance.controller;
 
 import com.finns.finance.dto.CardDTO;
-import com.finns.finance.dto.Finance;
 import com.finns.finance.dto.FinanceCount;
 import com.finns.finance.dto.FinanceDTO;
 import com.finns.finance.service.FinanceService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/product")
 @Api(value = "FinanceController", tags = "금융상품 정보")
-@CrossOrigin(origins = "http://localhost:5173") // 클라이언트의 도메인을 허용
 public class FinanceController {
 
     private final FinanceService financeService;

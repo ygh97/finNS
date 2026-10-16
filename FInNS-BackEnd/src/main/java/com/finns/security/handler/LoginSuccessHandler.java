@@ -1,7 +1,6 @@
 package com.finns.security.handler;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
 import com.finns.security.account.domain.CustomUser;
 import com.finns.security.dto.AuthResultDTO;
 import com.finns.security.dto.UserInfoDTO;
@@ -15,8 +14,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 
-@Log4j
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class LoginSuccessHandler implements AuthenticationSuccessHandler {

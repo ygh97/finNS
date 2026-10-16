@@ -7,14 +7,12 @@ import com.finns.security.account.domain.CustomUser;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @Api(value = "GreatOrStupidController", tags = "좋아요 싫어요")
-@PropertySource({"classpath:/application.properties"})
 @RestController
 @RequiredArgsConstructor
 public class GreatOrStupidController {

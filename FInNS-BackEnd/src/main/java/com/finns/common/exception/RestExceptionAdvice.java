@@ -20,7 +20,7 @@ public class RestExceptionAdvice {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDenied(Exception ex) {
-        return error(403, "권한이 없습니다.");
+        return error(403, ex.getMessage() != null ? ex.getMessage() : "권한이 없습니다.");
     }
 
     @ExceptionHandler(NoSuchElementException.class)

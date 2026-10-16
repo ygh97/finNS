@@ -5,7 +5,6 @@ import com.finns.recentUser.service.RecentUserService;
 import com.finns.security.account.domain.CustomUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +16,6 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@PropertySource({"classpath:/application.properties"})
 public class RecentUserController {
 
     private final RecentUserService recentUserService;

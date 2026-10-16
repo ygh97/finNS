@@ -1,31 +1,24 @@
 package com.finns.member.controller;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.finns.member.dto.ChangePasswordDTO;
 import com.finns.member.dto.MemberDTO;
 import com.finns.member.dto.MemberJoinDTO;
 import com.finns.member.dto.MemberUpdateDTO;
 import com.finns.member.service.MemberService;
 import com.finns.security.account.domain.CustomUser;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/member")
 public class MemberController {
+    // 배포 사이트의 체험 계정 - 누구나 쓰므로 비밀번호·사진을 바꾸지 못하게 막는다
+    private static final String DEMO_USERNAME = "demo";
 
-    // @Qualifier 추가하여 사용할 구현체 지정
     private final MemberService service;
-
-    public MemberController(@Qualifier("memberServiceImpl") MemberService service) {
-        this.service = service;
-    }
-
 
     @GetMapping("/checkusername/{username}")
     public ResponseEntity<Boolean> checkUsername(@PathVariable String username) {
@@ -46,17 +39,10 @@ public class MemberController {
         if (!user.getUsername().equals(username)) {
             throw new AccessDeniedException("본인 정보만 수정할 수 있습니다.");
         }
+        if (DEMO_USERNAME.equals(username)) {
+            throw new AccessDeniedException("체험 계정은 정보를 수정할 수 없습니다.");
+        }
         member.setUsername(username);
-
-        // `service.update` 메서드를 통해 프로필 및 비밀번호 업데이트 처리
         return ResponseEntity.ok(service.update(member));
     }
-
-
-
-//    @PutMapping("/{username}/changepassword")
-//    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
-//        service.changePassword(changePasswordDTO);
-//        return ResponseEntity.ok().build();
-//    }
 }

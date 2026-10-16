@@ -91,9 +91,6 @@ public class MemberServiceImpl implements MemberService {
         return null; // 아바타가 없을 경우 null 반환
     }
 
-
-
-
     @Transactional
     @Override
     public MemberDTO join(MemberJoinDTO dto) {
@@ -131,6 +128,5 @@ public class MemberServiceImpl implements MemberService {
 
         return get(member.getUsername());
     }
-
 
 }

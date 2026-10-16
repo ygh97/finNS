@@ -4,12 +4,8 @@ import com.finns.amountByCategory.service.AmountByCategoryService;
 import com.finns.card.dto.Card;
 import com.finns.card.dto.RecommendNCardRequestDTO;
 import com.finns.card.mapper.CardMapper;
-import com.finns.card.pagination.PageResponse;
-import com.finns.finance.dto.CardDTO;
-import com.finns.finance.dto.FinanceDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,27 +14,11 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@PropertySource({"classpath:/application.properties"})
 @Transactional(readOnly = true)
 public class CardService {
 
     private final CardMapper cardMapper;
     private final AmountByCategoryService amountByCategoryService;
-
-    public PageResponse<Card> getCards(int page, int size) {
-        int offset = (page - 1) * size; // 페이지 수에 따라 오프셋 계산
-        List<Card> cards = cardMapper.selectAllCards(offset, size);
-
-        long totalElements = cardMapper.countCards(); // 총 카드 수를 가져옴
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-
-        return new PageResponse<>(cards, totalPages, totalElements, size, page);
-    }
-
-    public Card getCardById(long card_no) {
-        Card card = cardMapper.selectCardById(card_no);
-        return card;
-    }
 
     public List<Card> getRecommendNCards(Long userNo, int num) {
         String topCategoryByUser = amountByCategoryService.calculateTopCategory(userNo);

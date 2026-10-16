@@ -1,6 +1,5 @@
 package com.finns.member.mapper;
 
-import com.finns.member.dto.ChangePasswordDTO;
 import com.finns.security.account.domain.AuthVO;
 import com.finns.security.account.domain.MemberVO;
 
@@ -14,7 +13,5 @@ public interface MemberMapper {
     int insertAuth(AuthVO auth); //회원 권한 정보 추가
 
     int update(MemberVO member);
-
-    int updatePassword(ChangePasswordDTO changePasswordDTO);
 
 }

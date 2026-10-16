@@ -1,9 +1,8 @@
-package com.multi.security.util;
+package com.finns.security.util;
 
 import com.finns.security.util.JwtProcessor;
 import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 // DB·스프링 컨텍스트 없이 동작하는 단위 테스트

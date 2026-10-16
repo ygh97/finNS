@@ -1,5 +1,4 @@
 package com.finns.security.handler;
-//401에러, 로그인을 안 하고 화면 요청 했을 때.
 
 import lombok.extern.slf4j.Slf4j;
 import com.finns.security.util.JsonResponse;
@@ -12,6 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+//401에러, 로그인을 안 하고 화면 요청 했을 때.
 
 @Slf4j
 @Component

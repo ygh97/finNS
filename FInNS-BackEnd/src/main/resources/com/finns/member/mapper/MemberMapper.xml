@@ -47,11 +47,4 @@
             renew_time = now()
         WHERE username =#{username}
     </update>
-
-    <update id="updatePassword">
-        UPDATE user        SET
-            password = #{newPassword},
-            renew_time = now()
-        WHERE username =#{username}
-    </update>
 </mapper>
