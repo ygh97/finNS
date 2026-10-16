@@ -18,7 +18,9 @@ fi
 # Docker + compose 플러그인
 if ! command -v docker >/dev/null 2>&1; then
   echo "[2/3] Docker 설치 (몇 분 걸림)"
-  curl -fsSL https://get.docker.com | sh
+  # 지원이 끝난 Ubuntu(20.04 등)에서는 공식 스크립트가 일부 패키지를 못 찾아 실패하므로 필요한 것만 다시 설치
+  curl -fsSL https://get.docker.com | sh || apt-get install -y \
+    docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-buildx-plugin
 fi
 usermod -aG docker "${SUDO_USER:-ubuntu}"
 
