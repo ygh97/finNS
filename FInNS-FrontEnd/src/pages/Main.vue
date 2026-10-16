@@ -27,10 +27,10 @@
                 <li v-for="(user, idx) in topUsers" :key="user.userNo">
                   <span class="rank">{{ idx + 1 }}</span>
                   <img :src="user.imgUrl" class="avatar" width="36" height="36" alt="" />
-                  <RouterLink :to="`/profile/${user.userNo}/spending`" class="flex-grow-1 text-gray-800 text-hover-primary fw-bold">
+                  <RouterLink :to="`/profile/${user.userNo}/spending`" class="flex-grow-1 text-gray-800 text-hover-primary fw-bold text-truncate">
                     {{ user.userName }}
                   </RouterLink>
-                  <span class="fw-semibold">{{ formatWon(user.totalAmount) }}</span>
+                  <span class="fw-semibold text-nowrap">{{ formatWon(user.totalAmount) }}</span>
                 </li>
               </ol>
 
@@ -42,10 +42,10 @@
                 <li v-for="(post, idx) in topPosts" :key="post.postNo">
                   <span class="rank">{{ idx + 1 }}</span>
                   <img :src="findCategory(post.category).icon" width="36" height="36" alt="" />
-                  <RouterLink :to="`/postView/${post.postNo}`" class="flex-grow-1 text-gray-800 text-hover-primary fw-bold">
+                  <RouterLink :to="`/postView/${post.postNo}`" class="flex-grow-1 text-gray-800 text-hover-primary fw-bold text-truncate">
                     {{ post.place }}
                   </RouterLink>
-                  <span class="fw-semibold">{{ formatWon(post.amount) }}</span>
+                  <span class="fw-semibold text-nowrap">{{ formatWon(post.amount) }}</span>
                 </li>
               </ol>
             </div>
