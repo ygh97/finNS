@@ -4,8 +4,8 @@
 --
 -- - 회원 12명, 비밀번호는 모두 1234  (로그인 예: demo / 1234)
 -- - 카드 100장: 이미지(assets/card/N.png)만 실제 파일이고 이름·혜택은 예시 값
--- - 소비 내역: 2026-07-01 ~ 2026-10-31 카드 거래. 실행 시각까지는 반영(renew) 완료,
---   이후 거래는 시간이 지나면 앱의 갱신 기능이 반영한다.
+-- - 소비 내역: 실행일 기준 92일 전 ~ 30일 후의 카드 거래. 실행 시각까지는 반영(renew) 완료,
+--   이후 거래는 시간이 지나면 앱의 갱신 기능이 반영한다. (언제 실행해도 이번 달 데이터가 있다)
 -- - 무작위 대신 CRC32 해시를 써서 몇 번을 실행해도 같은 데이터가 나온다.
 -- =====================================================================
 
@@ -13,6 +13,7 @@ USE finns;
 SET NAMES utf8mb4;
 
 SET @now = NOW();
+SET @start = TIMESTAMP(CURDATE() - INTERVAL 92 DAY);
 SET @pw = '$2a$10$LXP.t5mm2QGfWTJv1UyoSuXZPwCL7f3qrtuEraNYL44gotiIO4VSW'; -- BCrypt('1234')
 
 -- ---------------------------------------------------------------------
@@ -232,7 +233,7 @@ SELECT t.u,
           NULL),
        ROUND((c.lo + (CRC32(CONCAT(t.n, '-amount')) % 10000) / 10000 * (c.hi - c.lo)) / 100) * 100,
        SUBSTRING_INDEX(SUBSTRING_INDEX(c.places, '|', 1 + CRC32(CONCAT(t.n, '-place')) % 5), '|', -1),
-       TIMESTAMP('2026-07-01')
+       @start
            + INTERVAL (CRC32(CONCAT(t.n, '-day')) % 123) DAY
            + INTERVAL (480 + CRC32(CONCAT(t.n, '-minute')) % 840) MINUTE
 FROM (
