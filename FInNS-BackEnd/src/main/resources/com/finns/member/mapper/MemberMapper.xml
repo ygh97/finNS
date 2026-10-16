@@ -42,9 +42,8 @@
     <update id="update">
         UPDATE user
         SET
-            password = #{password},
-            <if test="img_url != null">img_url = #{img_url},</if>
-            renew_time = now()
+            password = #{password}
+            <if test="img_url != null">, img_url = #{img_url}</if>
         WHERE username =#{username}
     </update>
 </mapper>
